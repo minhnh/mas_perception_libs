@@ -8,7 +8,7 @@
 ### `BoundingBox`
 Port of bounding box creation for point clouds from C++. Provide the following API methods:
 * `get_pose`: returns `geometry_msgs/PoseStamped` of the bounding box.
-* `get_ros_message`: returns `mcr_perception_msgs/BoundingBox` version of the bounding box.
+* `get_ros_message`: returns `mas_perception_msgs/BoundingBox` version of the bounding box.
 
 ### `BoundingBox2D`
 Common interface in C++ and Python for rectangle regions in RGB images. Several visualization and utility methods are
@@ -56,11 +56,11 @@ objects in a single image message at a time and publish detection results on a d
 ## [`image_recognition_service.py`](../ros/src/mas_perception_libs/image_recognition_service.py)
 
 ### `RecognizeImageService`
-A wrapper for a [`RecognizeImage`](../../mcr_perception_msgs/srv/RecognizeImage.srv) service which uses
+A wrapper for a [`RecognizeImage`](../../mas_perception_msgs/srv/RecognizeImage.srv) service which uses
 `ImageClassifier` instances to classify images.
 
 ### `RecognizeImageServiceProxy`
-Interact with an [`RecognizeImage`](../../mcr_perception_msgs/srv/RecognizeImage.srv) service to get image
+Interact with an [`RecognizeImage`](../../mas_perception_msgs/srv/RecognizeImage.srv) service to get image
 classification results. An example can be found in the script
 [`image_recognition_server`](../ros/scripts/image_recognition_server), which uses the `RecognizeImageService` class
 above.
@@ -68,7 +68,7 @@ above.
 ## [`object_detector.py`](../ros/src/mas_perception_libs/object_detector.py)
 
 ### `ObjectDetector`
-* Interact with a [`DetectScene`](../../mcr_perception_msgs/action/DetectScene.action) action server to get a list of
+* Interact with a [`DetectScene`](../../mas_perception_msgs/action/DetectScene.action) action server to get a list of
 planes containing objects.
 * Perform common preprocessing steps on the objects (i.e. create bounding box, transform to desired frame,...).
 * Detection action is triggered by method `start_detect_objects`. A callback param can be passed in to be executed at
@@ -85,7 +85,7 @@ Serialize and deserialize ROS messages for interaction with C++ code.
 ### `SceneDetectionActionServer`
 An abstract class which creates an `actionlib.SimpleActionServer` object to handle object detection action goals using
 action specifications in
-[`mcr_perception_msgs/DetectScene.action`](../../mcr_perception_msgs/action/DetectScene.action). An extension of this
+[`mas_perception_msgs/DetectScene.action`](../../mas_perception_msgs/action/DetectScene.action). An extension of this
 class needs to implement:
 * `_initialize`: initialization procedures before starting the action servers (i.e. loading models).
 * `_execute_cb`: perform object detection and respond to the action client.

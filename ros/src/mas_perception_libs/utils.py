@@ -8,7 +8,7 @@ from rospkg import RosPack
 import tf
 from cv_bridge import CvBridgeError
 from sensor_msgs.msg import PointCloud2, Image as ImageMsg
-from mcr_perception_msgs.msg import PlaneList
+from mas_perception_msgs.msg import PlaneList
 from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_cv_image, _cloud_msg_to_image_msg,\
     _crop_organized_cloud_msg, _crop_cloud_to_xyz, _transform_point_cloud
 from .bounding_box import BoundingBox2D
@@ -34,7 +34,7 @@ class PlaneSegmenter(PlaneSegmenterWrapper):
         """
         :type cloud_msg: PointCloud2
         :return: (list of detected planes, filtered cloud message)
-        :rtype: (mcr_perception_msgs.msg.PlaneList, sensor_msgs.msg.PointCloud2)
+        :rtype: (mas_perception_msgs.msg.PlaneList, sensor_msgs.msg.PointCloud2)
         """
         serial_cloud = to_cpp(cloud_msg)
         serialized_plane_list, serialized_filtered_cloud = super(PlaneSegmenter, self).find_planes(serial_cloud)

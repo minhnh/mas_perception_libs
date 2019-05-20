@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_geometry
   pcl_ros
-  mcr_perception_msgs
+  mas_perception_msgs
 )
 
 find_package(PCL 1.7 REQUIRED)
@@ -37,7 +37,7 @@ catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
   CATKIN_DEPENDS
-    mcr_perception_msgs
+    mas_perception_msgs
 )
 
 ###########

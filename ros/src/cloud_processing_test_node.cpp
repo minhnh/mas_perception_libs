@@ -82,7 +82,7 @@ private:
 
         // also fit plane
         auto filteredCloudPtr = boost::make_shared<sensor_msgs::PointCloud2>();
-        mcr_perception_msgs::PlaneList::Ptr planeListPtr;
+        mas_perception_msgs::PlaneList::Ptr planeListPtr;
         try
         {
             planeListPtr = mPlaneSegmenter.findPlanes(transformedCloudPtr, filteredCloudPtr);

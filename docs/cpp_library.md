@@ -54,7 +54,7 @@ Boost conversion between NumPy array, seen in C++ code as `PyObject *`, and `cv:
     - [`bounding_box_2d.cpp`](../common/src/bounding_box_2d.cpp)
     - [`bounding_box_2d.h`](../common/include/mas_perception_libs/bounding_box_2d.h)
 * Function to create a `visualization_msgs/Marker` message of the plane's convex hull from a
-  `mcr_perception_msgs/Plane.msg` message. Defined in:
+  `mas_perception_msgs/Plane.msg` message. Defined in:
     - [`point_cloud_utils_ros.h`](../ros/include/mas_perception_libs/point_cloud_utils_ros.h)
     - [`point_cloud_utils_ros.cpp`](../ros/src/point_cloud_utils_ros.cpp)
 

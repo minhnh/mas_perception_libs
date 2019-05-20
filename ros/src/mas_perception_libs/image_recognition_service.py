@@ -1,7 +1,7 @@
 import os
 from importlib import import_module
 import rospy
-from mcr_perception_msgs.srv import RecognizeImage, RecognizeImageRequest, RecognizeImageResponse
+from mas_perception_msgs.srv import RecognizeImage, RecognizeImageRequest, RecognizeImageResponse
 from image_classifier import ImageClassifier
 
 

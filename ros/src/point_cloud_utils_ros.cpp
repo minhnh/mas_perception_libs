@@ -83,7 +83,7 @@ PlaneSegmenterROS::filterCloud(const sensor_msgs::PointCloud2::ConstPtr &pCloudP
 }
 
 visualization_msgs::Marker::Ptr
-planeMsgToMarkers(const mcr_perception_msgs::Plane &pPlaneMsg, const std::string &pNamespace,
+planeMsgToMarkers(const mas_perception_msgs::Plane &pPlaneMsg, const std::string &pNamespace,
                   Color pColor, float pThickness, int pId)
 {
     if (pPlaneMsg.convex_hull.empty())
@@ -123,10 +123,10 @@ planeMsgToMarkers(const mcr_perception_msgs::Plane &pPlaneMsg, const std::string
 }
 
 
-mcr_perception_msgs::Plane::Ptr
+mas_perception_msgs::Plane::Ptr
 planeModelToMsg(const PlaneModel &pModel)
 {
-    auto planeMsgPtr = boost::make_shared<mcr_perception_msgs::Plane>();
+    auto planeMsgPtr = boost::make_shared<mas_perception_msgs::Plane>();
     planeMsgPtr->header = pcl_conversions::fromPCL(pModel.mHeader);
 
     // plane coefficients
@@ -181,7 +181,7 @@ PlaneSegmenterROS::setParams(const PlaneFittingConfig &pConfig)
     mPlaneSegmenter.setParams(planeFitParams);
 }
 
-mcr_perception_msgs::PlaneList::Ptr
+mas_perception_msgs::PlaneList::Ptr
 PlaneSegmenterROS::findPlanes(const sensor_msgs::PointCloud2::ConstPtr &pCloudPtr,
                               sensor_msgs::PointCloud2::Ptr &pFilteredCloudMsgPtr)
 {
@@ -191,7 +191,7 @@ PlaneSegmenterROS::findPlanes(const sensor_msgs::PointCloud2::ConstPtr &pCloudPt
     pcl::toROSMsg(*filteredCloudPtr, *pFilteredCloudMsgPtr);
 
     auto planeModel = mPlaneSegmenter.findPlane(filteredCloudPtr);
-    auto planeListPtr = boost::make_shared<mcr_perception_msgs::PlaneList>();
+    auto planeListPtr = boost::make_shared<mas_perception_msgs::PlaneList>();
     auto planeMsgPtr = planeModelToMsg(planeModel);
     planeListPtr->planes.push_back(*planeMsgPtr);
     return planeListPtr;

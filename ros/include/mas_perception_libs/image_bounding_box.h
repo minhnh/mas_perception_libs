@@ -13,8 +13,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_geometry/pinhole_camera_model.h>
 #include <tf/transform_listener.h>
-#include <mcr_perception_msgs/BoundingBoxList.h>
-#include <mcr_perception_msgs/ImageList.h>
+#include <mas_perception_msgs/BoundingBoxList.h>
+#include <mas_perception_msgs/ImageList.h>
 #include <mas_perception_libs/bounding_box_2d.h>
 
 namespace mas_perception_libs
@@ -24,10 +24,10 @@ class ImageBoundingBox
 {
 public:
     ImageBoundingBox(const sensor_msgs::Image&, const sensor_msgs::CameraInfo&,
-                     const mcr_perception_msgs::BoundingBoxList&);
+                     const mas_perception_msgs::BoundingBoxList&);
     ~ImageBoundingBox();
 
-    const mcr_perception_msgs::ImageList& cropped_image_list() const { return mCroppedImageList; }
+    const mas_perception_msgs::ImageList& cropped_image_list() const { return mCroppedImageList; }
     const std::vector<std::vector<cv::Point2f>>& box_vertices_vector() const { return mBoxVerticesVector; }
 
 private:
@@ -36,7 +36,7 @@ private:
     image_geometry::PinholeCameraModel mCameraModel;
     tf::TransformListener mTfListener;
 
-    mcr_perception_msgs::ImageList mCroppedImageList;
+    mas_perception_msgs::ImageList mCroppedImageList;
     std::vector<std::vector<cv::Point2f>> mBoxVerticesVector;
 };
 

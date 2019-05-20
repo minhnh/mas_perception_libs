@@ -3,7 +3,7 @@ import cv2
 from cv_bridge import CvBridgeError
 from visualization_msgs.msg import Marker
 
-from mcr_perception_msgs.msg import Plane as PlaneMsg
+from mas_perception_msgs.msg import Plane as PlaneMsg
 from mas_perception_libs._cpp_wrapper import _draw_labeled_boxes, _fit_box_to_image, _crop_image, _plane_msg_to_marker
 from .bounding_box import BoundingBox2DWrapper
 from .ros_message_serialization import from_cpp, to_cpp
