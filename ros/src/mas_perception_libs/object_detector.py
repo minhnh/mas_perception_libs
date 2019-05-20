@@ -2,7 +2,7 @@ import rospy
 import tf
 from actionlib import SimpleActionClient
 from geometry_msgs.msg import PointStamped
-from mcr_perception_msgs.msg import PlaneList, DetectSceneGoal, DetectSceneAction
+from mas_perception_msgs.msg import PlaneList, DetectSceneGoal, DetectSceneAction
 
 
 class ObjectDetector(object):
@@ -60,7 +60,7 @@ class ObjectDetector(object):
                 if plane.header.frame_id == target_frame:
                     continue
 
-                # assuming only mcr_perception_msgs/Plane.pose is used
+                # assuming only mas_perception_msgs/Plane.pose is used
                 ps = PointStamped()
                 ps.header = plane.header
                 ps.point = plane.plane_point

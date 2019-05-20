@@ -8,7 +8,7 @@ from actionlib import SimpleActionServer
 from cv_bridge import CvBridge
 from sensor_msgs.msg import PointCloud2
 from visualization_msgs.msg import Marker
-from mcr_perception_msgs.msg import DetectSceneAction, DetectSceneResult, PlaneList, Object
+from mas_perception_msgs.msg import DetectSceneAction, DetectSceneResult, PlaneList, Object
 from mas_perception_libs.cfg import PlaneFittingConfig
 from .bounding_box import BoundingBox, BoundingBox2D
 from .image_detector import ImageDetectorBase, SingleImageDetectionHandler
@@ -43,8 +43,8 @@ class SceneDetectionActionServer(object):
     def is_object_on_plane(plane_msg, obj_box_msg, z_tolerance=0.05):
         """
         :param z_tolerance: how much can an object be above the plane (meter)
-        :type plane_msg: mcr_perception_msgs.msg.Plane
-        :type obj_box_msg: mcr_perception_msgs.msg.BoundingBox
+        :type plane_msg: mas_perception_msgs.msg.Plane
+        :type obj_box_msg: mas_perception_msgs.msg.BoundingBox
         :rtype: bool
         """
         obj_plane_z_diff = obj_box_msg.center.z - obj_box_msg.dimensions.z / 2 - plane_msg.plane_point.z

@@ -17,7 +17,7 @@ namespace mas_perception_libs
 
 ImageBoundingBox::ImageBoundingBox(const sensor_msgs::Image &pImageMsg,
                                    const sensor_msgs::CameraInfo &pCameraInfo,
-                                   const mcr_perception_msgs::BoundingBoxList &pBoundingBoxList)
+                                   const mas_perception_msgs::BoundingBoxList &pBoundingBoxList)
 {
     if (pBoundingBoxList.bounding_boxes.empty())
     {

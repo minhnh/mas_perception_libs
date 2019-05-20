@@ -12,7 +12,7 @@
 #include <std_msgs/Header.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <visualization_msgs/Marker.h>
-#include <mcr_perception_msgs/PlaneList.h>
+#include <mas_perception_msgs/PlaneList.h>
 #include <mas_perception_libs/color.h>
 #include <mas_perception_libs/PlaneFittingConfig.h>
 #include <mas_perception_libs/bounding_box_2d.h>
@@ -54,13 +54,13 @@ cropOrganizedCloudMsg(const sensor_msgs::PointCloud2 &pCloudMsg, BoundingBox2D &
  * @return: visualization marker of the plane's convex hull
  */
 visualization_msgs::Marker::Ptr
-planeMsgToMarkers(const mcr_perception_msgs::Plane &pPlaneMsg, const std::string &pNamespace,
+planeMsgToMarkers(const mas_perception_msgs::Plane &pPlaneMsg, const std::string &pNamespace,
                   Color pColor = Color(Color::TEAL), float pThickness = 0.005, int pId = 1);
 
 /*!
  * @brief converts PlaneModel object to a plane message
  */
-mcr_perception_msgs::Plane::Ptr
+mas_perception_msgs::Plane::Ptr
 planeModelToMsg(const PlaneModel &pModel);
 
 /*!
@@ -93,7 +93,7 @@ public:
      * @param pFilteredCloudMsg: (out) pointer to filtered cloud
      * @return pointer to a list of detected planes
      */
-    virtual mcr_perception_msgs::PlaneList::Ptr
+    virtual mas_perception_msgs::PlaneList::Ptr
     findPlanes(const sensor_msgs::PointCloud2::ConstPtr &pCloudPtr, sensor_msgs::PointCloud2::Ptr &pFilteredCloudMsg);
 
 protected:

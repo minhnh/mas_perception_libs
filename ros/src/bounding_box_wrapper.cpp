@@ -12,13 +12,13 @@
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <mas_perception_libs/bounding_box.h>
-#include <mcr_perception_msgs/BoundingBox.h>
+#include <mas_perception_msgs/BoundingBox.h>
 #include <mas_perception_libs/impl/ros_message_serialization.hpp>
 #include <mas_perception_libs/bounding_box_wrapper.h>
 
 namespace bp = boost::python;
 using BoundingBox = mas_perception_libs::BoundingBox;
-using BoundingBoxMsg = mcr_perception_msgs::BoundingBox;
+using BoundingBoxMsg = mas_perception_msgs::BoundingBox;
 
 namespace mas_perception_libs
 {

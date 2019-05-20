@@ -119,7 +119,7 @@ public:
         sensor_msgs::PointCloud2::Ptr cloudMsgPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloudMsg);
         // also fit plane
         auto filteredCloudPtr = boost::make_shared<sensor_msgs::PointCloud2>();
-        mcr_perception_msgs::PlaneList::Ptr planeListPtr;
+        mas_perception_msgs::PlaneList::Ptr planeListPtr;
         try
         {
             planeListPtr = PlaneSegmenterROS::findPlanes(cloudMsgPtr, filteredCloudPtr);
@@ -175,12 +175,12 @@ getCropsAndBoundingBoxes(const std::string &pSerialImageMsg, const std::string &
 {
     const sensor_msgs::Image &imageMsg = from_python<sensor_msgs::Image>(pSerialImageMsg);
     const sensor_msgs::CameraInfo &camInfo = from_python<sensor_msgs::CameraInfo>(pSerialCameraInfo);
-    const mcr_perception_msgs::BoundingBoxList &boundingBoxList
-            = from_python<mcr_perception_msgs::BoundingBoxList>(pSerialBoundingBoxList);
+    const mas_perception_msgs::BoundingBoxList &boundingBoxList
+            = from_python<mas_perception_msgs::BoundingBoxList>(pSerialBoundingBoxList);
     ImageBoundingBox mImgBoundingBox(imageMsg, camInfo, boundingBoxList);
 
     // serialize image list
-    const mcr_perception_msgs::ImageList &imageList = mImgBoundingBox.cropped_image_list();
+    const mas_perception_msgs::ImageList &imageList = mImgBoundingBox.cropped_image_list();
     std::string serialImageList = to_python(imageList);
 
     // convert vector to bp::list
@@ -356,7 +356,7 @@ transformPointCloudWrapper(const std::string &pSerialCloud, PyObject * pTfMatrix
 std::string
 planeMsgToMarkerWrapper(const std::string &pSerialPlane, const std::string &pNamespace)
 {
-    auto plane = from_python<mcr_perception_msgs::Plane>(pSerialPlane);
+    auto plane = from_python<mas_perception_msgs::Plane>(pSerialPlane);
     auto markerPtr = planeMsgToMarkers(plane, pNamespace);
     return to_python(*markerPtr);
 }

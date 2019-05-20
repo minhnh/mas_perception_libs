@@ -13,7 +13,7 @@
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>dynamic_reconfigure</depend>
-  <depend>mcr_perception_msgs</depend>
+  <depend>mas_perception_msgs</depend>
 
   <build_depend>cv_bridge</build_depend>
   <build_depend>image_geometry</build_depend>
