@@ -38,7 +38,7 @@ class RecognizeImageService(object):
         rospy.loginfo('number of images to recognize: ' + str(len(req.images)))
         if req.model_name not in self._classifiers:
             model_path = os.path.join(self._model_dir, req.model_name + '.h5')
-            class_file = os.path.join(self._model_dir, req.model_name + '.txt')
+            class_file = os.path.join(self._model_dir, req.model_name + '.yml')
             rospy.loginfo('recognition model path: ' + model_path)
             rospy.loginfo('recognition class file path: ' + class_file)
             self._classifiers[req.model_name] = self._classifier_class(model_path=model_path, class_file=class_file)

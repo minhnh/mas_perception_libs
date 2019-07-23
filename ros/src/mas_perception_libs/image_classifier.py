@@ -1,4 +1,5 @@
 import os
+import yaml
 from abc import ABCMeta, abstractmethod
 import numpy as np
 from cv_bridge import CvBridge
@@ -11,7 +12,7 @@ class ImageClassifier(object):
     """
     __metaclass__ = ABCMeta
 
-    _classes = None     # type: list
+    _classes = None     # type: dict
 
     def __init__(self, **kwargs):
         # read information on classes, either directly, via a file, or from a data directory
@@ -20,7 +21,11 @@ class ImageClassifier(object):
         if self._classes is None:
             class_file = kwargs.get('class_file', None)
             if class_file is not None and os.path.exists(class_file):
-                self._classes = ImageClassifier.read_classes_from_file(class_file)
+                with open(class_file) as infile:
+                    if yaml.__version__ < '5.1':
+                        self._classes = yaml.load(infile)
+                    else:
+                        self._classes = yaml.load(infile, Loader=yaml.FullLoader)
 
         if self._classes is None:
             data_dir = kwargs.get('data_dir', None)
@@ -34,7 +39,7 @@ class ImageClassifier(object):
     @property
     def classes(self):
         """
-        list of strings containing class names TODO(minhnh): make this dictionary from predicted class to class name
+        dictionary mapping from predicted numeric class value to class name
         """
         return self._classes
 
@@ -51,17 +56,6 @@ class ImageClassifier(object):
         :rtype: tuple
         """
         pass
-
-    @staticmethod
-    def write_classes_to_file(classes, outfile_path):
-        with open(outfile_path, 'w') as outfile:
-            outfile.write('\n'.join(classes))
-
-    @staticmethod
-    def read_classes_from_file(infile):
-        with open(infile) as f:
-            content = f.readlines()
-            return [x.strip() for x in content]
 
 
 class ImageClassifierTest(ImageClassifier):

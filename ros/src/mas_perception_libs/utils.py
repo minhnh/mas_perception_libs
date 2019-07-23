@@ -89,14 +89,16 @@ def get_bag_file_msg_by_type(bag_file_path, msg_type):
 def get_classes_in_data_dir(data_dir):
     """
     :type data_dir: str
-    :return: list of classes as names of top level directories
+    :return: dictionary mapping from indices to classes as names of top level directories
     """
-    classes = []
+    class_dict = {}
+    index = 0
     for subdir in sorted(os.listdir(data_dir)):
         if os.path.isdir(os.path.join(data_dir, subdir)):
-            classes.append(subdir)
+            class_dict[index] = subdir
+            index += 1
 
-    return classes
+    return class_dict
 
 
 def process_image_message(image_msg, cv_bridge, target_size=None, func_preprocess_img=None):
