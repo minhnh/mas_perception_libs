@@ -113,26 +113,36 @@ class KerasImageClassifier(ImageClassifier):
         # CvBridge for ROS image conversion
         self._cv_bridge = CvBridge()
 
+    def classify_np_images(self, np_images):
+        """
+        Classify NumPy images
+        """
+        image_tensor = []
+        indices = []
+        for i in range(len(np_images)):
+            if np_images[i] is None:
+                # skip broken images
+                continue
+
+            image_tensor.append(np_images[i])
+            indices.append(i)
+
+        image_tensor = np.array(image_tensor)
+        preds = self._model.predict(image_tensor)
+        class_indices = np.argmax(preds, axis=1)
+        confidences = np.max(preds, axis=1)
+        predicted_classes = [self._classes[i] for i in class_indices]
+
+        return indices, predicted_classes, confidences
+
     def classify(self, image_messages):
+        """
+        Classify ROS `sensor_msgs/Image` messages
+        """
         if len(image_messages) == 0:
             return [], [], []
 
         np_images = [process_image_message(msg, self._cv_bridge, self._target_size, self._img_preprocess_func)
                      for msg in image_messages]
 
-        image_array = []
-        indices = []
-        for i in range(len(np_images)):
-            if np_images[i] is None:
-                continue
-
-            image_array.append(np_images[i])
-            indices.append(i)
-
-        image_array = np.array(image_array)
-        preds = self._model.predict(image_array)
-        class_indices = np.argmax(preds, axis=1)
-        confidences = np.max(preds, axis=1)
-        predicted_classes = [self._classes[i] for i in class_indices]
-
-        return indices, predicted_classes, confidences
+        return self.classify_np_images(np_images)
