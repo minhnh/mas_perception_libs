@@ -102,7 +102,7 @@ data
 ├── class_1
 └── class_2
 ```
-should returns
+should return
 ```
 {0: 'class_1', 1: 'class_2'}
 ```
