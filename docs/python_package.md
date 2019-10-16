@@ -95,15 +95,16 @@ An extension of `SceneDetectionActionServer` which uses `SingleImageDetectionHan
 from an image extracted from a `sensor_msgs/PointCloud2` message, while also fitting planes in the clouds.
 
 ## [`utils.py`](../ros/src/mas_perception_libs/utils.py)
-* `get_classes_in_data_dir`: Returns a list of strings as class names for a directory. This directory structure
+* `get_classes_in_data_dir`: Returns a dictionary mapping from indices to classes as names of top level directories.
+This directory structure
 ```
 data
 ├── class_1
 └── class_2
 ```
-should returns
+should return
 ```
-['class_1', 'class_2']
+{0: 'class_1', 1: 'class_2'}
 ```
 when called on `data`.
 * `process_image_message`: Converts `sensor_msgs/Image` to CV image, then resizes and/or runs a preprocessing function
