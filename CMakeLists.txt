@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(PCL 1.7 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS python)
+find_package(Boost 1.63.0 REQUIRED COMPONENTS python)
 find_package(PythonLibs 2.7 REQUIRED)
 find_package(OpenCV REQUIRED)
 
@@ -74,8 +74,7 @@ target_link_libraries(${PROJECT_NAME}
 ###################################
 # python wrapper for cpp libraries
 add_library(_cpp_wrapper SHARED
-  common/src/init_numpy_api.cpp
-  common/src/pyboost_cv3_converter.cpp
+  common/src/cvmat_ndarray_converter.cpp
   ros/src/bounding_box_wrapper.cpp
   ros/src/boost_python_module.cpp
 )
