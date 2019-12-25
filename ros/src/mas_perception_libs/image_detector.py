@@ -1,3 +1,5 @@
+from importlib import import_module
+
 import os
 from abc import ABCMeta, abstractmethod
 import yaml
@@ -240,3 +242,74 @@ class SingleImageDetectionHandler(object):
             self._result_pub.publish(drawn_img_msg)
 
         return bounding_boxes, classes, confidences
+
+class TorchImageDetector(ImageDetectorBase):
+    _model = None
+    _detection_threshold = 0.
+    _eval_device = None
+
+    def __init__(self, **kwargs):
+        import torch
+        self._eval_device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        super(TorchImageDetector, self).__init__(**kwargs)
+
+    def load_model(self, **kwargs):
+        import torch
+
+        detector_module = kwargs.get('detector_module', None)
+        detector_instantiator = kwargs.get('detector_instantiator', None)
+        self._detection_threshold = kwargs.get('detection_threshold', 0.)
+        model_path = kwargs.get('model_path', None)
+
+        print('[load_model] Received the following model parameters:')
+        print('detection_module: {0}'.format(detector_module))
+        print('detection_instantiator: {0}'.format(detector_instantiator))
+        print('detection_threshold: {0}'.format(self._detection_threshold))
+        print('model_path: {0}'.format(model_path))
+        if not model_path:
+            raise ValueError('[load_model] model_path not specified')
+
+        print('[load_model] Instantiating model')
+        detector_instantiator = getattr(import_module(detector_module),
+                                        detector_instantiator)
+        self._model = detector_instantiator(len(self._classes.keys()))
+
+        print('[load_model] Loading model parameters from {0}'.format(model_path))
+        self._model.load_state_dict(torch.load(model_path, map_location=self._eval_device))
+        print('[load_model] Successfully loaded model')
+
+        self._model.eval()
+        self._model.to(self._eval_device)
+
+    def _detect(self, images, orig_img_sizes):
+        import torch
+        from torchvision.transforms import functional
+
+        predictions = []
+        for image in images:
+            img_tensor = functional.to_tensor(image)
+            with torch.no_grad():
+                pred = self._model([img_tensor.to(self._eval_device)])
+            pred_class = [self._classes[i] for i in list(pred[0]['labels'].cpu().numpy())]
+            pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(pred[0]['boxes'].cpu().detach().numpy())]
+            pred_score = list(pred[0]['scores'].cpu().detach().numpy())
+            pred_t = [i for i, x in enumerate(pred_score) if x > self._detection_threshold]
+
+            detected_obj_data = []
+            if pred_t:
+                pred_t = pred_t[-1]
+                pred_boxes = pred_boxes[:pred_t+1]
+                pred_class = pred_class[:pred_t+1]
+                pred_score = pred_score[:pred_t+1]
+
+                num_detected_objects = len(pred_boxes)
+                for i in range(len(num_detected_objects)):
+                    obj_data_dict = {ImageDetectionKey.CLASS: pred_class[i],
+                                     ImageDetectionKey.CONF: pred_score[i],
+                                     ImageDetectionKey.X_MIN: pred_boxes[i][0][0],
+                                     ImageDetectionKey.Y_MIN: pred_boxes[i][0][1],
+                                     ImageDetectionKey.X_MAX: pred_boxes[i][1][0],
+                                     ImageDetectionKey.Y_MAX: pred_boxes[i][1][1]}
+                    detected_obj_data.append(obj_data_dict)
+            predictions.append(detected_obj_data)
+        return predictions

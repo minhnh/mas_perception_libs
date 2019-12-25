@@ -44,7 +44,7 @@ Abstract class for detecting things in images.
     in the `model_kwargs_file` passed into the class constructor. An example of this file is
     [`image_detector_test_kwargs.yml`](../models/image_detector_test_kwargs.yml).
     - `_detect`: perform detection on a list of `sensor_msgs/Image` objects using the detection model.
-* Extension of this class can be used with `SingleImageDetectionHandler`, which is used in `ImageDetectionActionServer`
+* Extension of this class can be used with `SingleImageDetectionHandler`, which is used in `PlaneDetectionActionServer`
 and the test script [`image_detection_test`](../ros/scripts/image_detection_test) for detecting in images.
 
 ### `ImageDetectorTest`
@@ -90,7 +90,10 @@ action specifications in `mas_perception_msgs/DetectScene.action`. An extension 
 * `_initialize`: initialization procedures before starting the action servers (i.e. loading models).
 * `_execute_cb`: perform object detection and respond to the action client.
 
-### `ImageDetectionActionServer`
+### `ObjectDetectionActionServer`
+Uses `SingleImageDetectionHandler` and `ImageDetectorBase` for detecting objects in an image extracted from a `sensor_msgs/PointCloud2` message.
+
+### `PlaneDetectionActionServer`
 An extension of `SceneDetectionActionServer` which uses `SingleImageDetectionHandler` and `ImageDetectorBase` for detecting
 from an image extracted from a `sensor_msgs/PointCloud2` message, while also fitting planes in the clouds.
 

@@ -16,8 +16,25 @@ Contains shared perception definitions in Python.
 
 ## Executables
 
-### [`image_detection_action_server`](ros/scripts/image_detection_action_server)
-Run an instance of `ImageDetectionActionServer` (described in [Python Documentation](docs/python_package.md)).
+### [`object_detection_action_server`](ros/scripts/object_detection_action_server)
+Run an instance of `ObjectDetectionActionServer` (described in [Python Documentation](docs/python_package.md)).
+
+Parameters:
+* `action_name`: name of action server
+* `cloud_topic`: name of topic which supply `sensor_msgs/PointCloud2` messages
+* `target_frame`: name of reference frame which the object poses will be transformed to
+* `class_annotations`: YAML file which maps numeric class values to class names, used by the
+[`ImageDetectorBase` class](docs/python_package.md) to configure the detection model. An example of this file is
+[`class_annotation_example.yml`](models/class_annotation_example.yml).
+* `kwargs_file`: YAML file which is used by the [`ImageDetectorBase` class](docs/python_package.md) to specify
+additional parameters needed to configure the detection model. An example is
+[`image_detector_test_kwargs.yml`](models/image_detector_test_kwargs.yml).
+* `detection_module`: name of the module containing the `ImageDetectorBase` extension to import.
+* `detection_class`: name of the extension of the `ImageDetectorBase` class to import.
+
+
+### [`plane_detection_action_server`](ros/scripts/plane_detection_action_server)
+Run an instance of `PlaneDetectionActionServer` (described in [Python Documentation](docs/python_package.md)).
 
 Parameters:
 * `action_name`: name of action server

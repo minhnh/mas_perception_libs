@@ -3,11 +3,11 @@ from importlib import import_module
 import os
 
 import rospy
-from mas_perception_libs import ImageDetectionActionServer
+from mas_perception_libs import PlaneDetectionActionServer
 
 
 if __name__ == '__main__':
-    rospy.init_node('~image_detection_action_server')
+    rospy.init_node('~plane_detection_action_server')
 
     # get action server name
     action_name = rospy.get_param('~action_name', None)
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     detection_class = getattr(import_module(detect_module), detect_class_name)
 
     # create service
-    ImageDetectionActionServer(action_name, detection_class=detection_class, cloud_topic=cloud_topic,
+    PlaneDetectionActionServer(action_name, detection_class=detection_class, cloud_topic=cloud_topic,
                                target_frame=target_frame, class_annotation_file=class_annotation_file,
                                kwargs_file=kwargs_file)
 
