@@ -15,7 +15,7 @@ from mas_perception_libs.cfg import PlaneFittingConfig
 from .bounding_box import BoundingBox, BoundingBox2D
 from .image_detector import ImageDetectorBase, SingleImageDetectionHandler
 from .utils import PlaneSegmenter, cloud_msg_to_image_msg, transform_cloud_with_listener,\
-    crop_organized_cloud_msg, crop_cloud_to_xyz
+    get_obj_msg_from_detection
 from .visualization import plane_msg_to_marker
 
 
@@ -156,42 +156,15 @@ class ObjectDetectionActionServer(object):
         """
         result = DetectObjectsResult()
         for index, box in enumerate(bounding_boxes):
-            # TODO(minhnh): BoundingBox code returns bad positions and dimensions
-            # check if object in on plane
-            cropped_cloud = crop_organized_cloud_msg(cloud_msg, box)
+            detected_obj = get_obj_msg_from_detection(cloud_msg, box,
+                                                      classes[index],
+                                                      confidences[index],
+                                                      self.frame_id)
 
-            obj_coords = crop_cloud_to_xyz(cropped_cloud, BoundingBox2D(box_geometry=(0, 0, cropped_cloud.width,
-                                                                                      cropped_cloud.height)))
-            obj_coords = np.reshape(obj_coords, (-1, 3))
-            min_coord = np.nanmin(obj_coords, axis=0)
-            max_coord = np.nanmax(obj_coords, axis=0)
-            mean_coord = np.nanmean(obj_coords, axis=0)
-
-            # fill object geometry info
-            detected_obj = Object()
-            detected_obj.bounding_box.center.x = mean_coord[0]
-            detected_obj.bounding_box.center.y = mean_coord[1]
-            detected_obj.bounding_box.center.z = mean_coord[2]
-            detected_obj.bounding_box.dimensions.x = max_coord[0] - min_coord[0]
-            detected_obj.bounding_box.dimensions.y = max_coord[1] - min_coord[1]
-            detected_obj.bounding_box.dimensions.z = max_coord[2] - min_coord[2]
             box_msg = detected_obj.bounding_box
-
-            rospy.loginfo("adding object '%s', position (%.3f, %.3f, %.3f), dimensions (%.3f, %.3f, %.3f)"
+            rospy.loginfo("Adding object '%s', position (%.3f, %.3f, %.3f), dimensions (%.3f, %.3f, %.3f)"
                           % (classes[index], box_msg.center.x, box_msg.center.y, box_msg.center.z,
                              box_msg.dimensions.x, box_msg.dimensions.y, box_msg.dimensions.z))
-
-            detected_obj.name = classes[index]
-            detected_obj.category = classes[index]
-            detected_obj.probability = confidences[index]
-            detected_obj.pointcloud = cropped_cloud
-            detected_obj.rgb_image = cloud_msg_to_image_msg(cropped_cloud)
-            detected_obj.pose.header.frame_id = self._target_frame
-            detected_obj.pose.header.stamp = rospy.Time.now()
-            detected_obj.pose.pose.position = box_msg.center
-            detected_obj.pose.pose.position.x = mean_coord[0]
-            detected_obj.pose.pose.orientation.w = 1.0
-
             result.object_list.objects.append(detected_obj)
         return result
 
@@ -309,46 +282,20 @@ class PlaneDetectionActionServer(SceneDetectionActionServer):
         result = DetectSceneResult()
         plane = plane_list.planes[0]
         for index, box in enumerate(bounding_boxes):
-            # TODO(minhnh): BoundingBox code returns bad positions and dimensions
-            # check if object in on plane
-            cropped_cloud = crop_organized_cloud_msg(cloud_msg, box)
+            detected_obj = get_obj_msg_from_detection(cloud_msg, box,
+                                                      classes[index],
+                                                      confidences[index],
+                                                      plane.header.frame_id)
 
-            obj_coords = crop_cloud_to_xyz(cropped_cloud, BoundingBox2D(box_geometry=(0, 0, cropped_cloud.width,
-                                                                                      cropped_cloud.height)))
-            obj_coords = np.reshape(obj_coords, (-1, 3))
-            min_coord = np.nanmin(obj_coords, axis=0)
-            max_coord = np.nanmax(obj_coords, axis=0)
-            mean_coord = np.nanmean(obj_coords, axis=0)
-
-            # fill object geometry info
-            detected_obj = Object()
-            detected_obj.bounding_box.center.x = mean_coord[0]
-            detected_obj.bounding_box.center.y = mean_coord[1]
-            detected_obj.bounding_box.center.z = mean_coord[2]
-            detected_obj.bounding_box.dimensions.x = max_coord[0] - min_coord[0]
-            detected_obj.bounding_box.dimensions.y = max_coord[1] - min_coord[1]
-            detected_obj.bounding_box.dimensions.z = max_coord[2] - min_coord[2]
             box_msg = detected_obj.bounding_box
-
             if not SceneDetectionActionServer.is_object_on_plane(plane, box_msg):
                 rospy.logdebug("skipping object '%s', position (%.3f, %.3f, %.3f)"
                                % (classes[index], box_msg.center.x, box_msg.center.y, box_msg.center.z))
                 continue
 
-            rospy.loginfo("adding object '%s', position (%.3f, %.3f, %.3f), dimensions (%.3f, %.3f, %.3f)"
+            rospy.loginfo("Adding object '%s', position (%.3f, %.3f, %.3f), dimensions (%.3f, %.3f, %.3f)"
                           % (classes[index], box_msg.center.x, box_msg.center.y, box_msg.center.z,
                              box_msg.dimensions.x, box_msg.dimensions.y, box_msg.dimensions.z))
-
-            detected_obj.name = classes[index]
-            detected_obj.category = classes[index]
-            detected_obj.probability = confidences[index]
-            detected_obj.pointcloud = cropped_cloud
-            detected_obj.rgb_image = cloud_msg_to_image_msg(cropped_cloud)
-            detected_obj.pose.header = plane.header
-            detected_obj.pose.pose.position = box_msg.center
-            detected_obj.pose.pose.position.x = mean_coord[0]
-            detected_obj.pose.pose.orientation.w = 1.0
-
             plane.object_list.objects.append(detected_obj)
         result.planes.append(plane)
         return result
