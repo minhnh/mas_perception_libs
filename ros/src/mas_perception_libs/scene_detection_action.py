@@ -108,8 +108,8 @@ class ObjectDetectionActionServer(object):
 
     def _execute_cb(self, _):
         # subscribe and wait for cloud message
-        print('Object detection action request received')
-        print('Waiting for cloud message...')
+        rospy.loginfo('Object detection action request received')
+        rospy.loginfo('Waiting for cloud message...')
         try:
             cloud_msg = rospy.wait_for_message(self._cloud_topic, PointCloud2,
                                                timeout=self._timeout_s)

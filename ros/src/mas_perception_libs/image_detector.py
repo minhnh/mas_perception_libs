@@ -261,22 +261,22 @@ class TorchImageDetector(ImageDetectorBase):
         self._detection_threshold = kwargs.get('detection_threshold', 0.)
         model_path = kwargs.get('model_path', None)
 
-        print('[load_model] Received the following model parameters:')
-        print('detection_module: {0}'.format(detector_module))
-        print('detection_instantiator: {0}'.format(detector_instantiator))
-        print('detection_threshold: {0}'.format(self._detection_threshold))
-        print('model_path: {0}'.format(model_path))
+        rospy.loginfo('[load_model] Received the following model parameters:')
+        rospy.loginfo('detection_module: %s', detector_module)
+        rospy.loginfo('detection_instantiator: %s', detector_instantiator)
+        rospy.loginfo('detection_threshold: %f', self._detection_threshold)
+        rospy.loginfo('model_path: %s', model_path)
         if not model_path:
             raise ValueError('[load_model] model_path not specified')
 
-        print('[load_model] Instantiating model')
+        rospy.loginfo('[load_model] Instantiating model')
         detector_instantiator = getattr(import_module(detector_module),
                                         detector_instantiator)
         self._model = detector_instantiator(len(self._classes.keys()))
 
-        print('[load_model] Loading model parameters from {0}'.format(model_path))
+        rospy.loginfo('[load_model] Loading model parameters from %s', model_path)
         self._model.load_state_dict(torch.load(model_path, map_location=self._eval_device))
-        print('[load_model] Successfully loaded model')
+        rospy.loginfo('[load_model] Successfully loaded model')
 
         self._model.eval()
         self._model.to(self._eval_device)
