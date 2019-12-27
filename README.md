@@ -56,7 +56,7 @@ Node for testing image detection models. Can test images from a directory, a `se
 
 Parameters:
 * `class_annotations`, `kwargs_file`, `detection_module`, and `detection_class`: parameters for `ImageDetectorBase`
-class similar to ones described above for `image_detection_action_server`.
+class similar to ones described above for `object_detection_action_server` and `plane_detection_action_server`.
 * `result_topic`: `sensor_msgs/Image` topic which visualized detection results are published.
 * `image_directory`: if specified will ignore other image sources and read images from this directory for testing.
 * `cloud_topic`: if specified and `image_directory` is not specified will extract images from `sensor_msgs/PointCloud2`
@@ -129,8 +129,19 @@ dynamic reconfiguration defined in [PlaneFitting.cfg](ros/config/PlaneFitting.cf
 
 ## Launch Files
 
-### [`image_detection.launch`](ros/launch/image_detection.launch)
-Launch the `image_detection_action_server` script. Arguments are the same with the script's parameters:
+### [`plane_detection.launch`](ros/launch/plane_detection.launch)
+Launch the `plane_detection_action_server` script. Arguments are the same with the script's parameters:
+* `action_name` (default: `"/mas_perception/detect_image"`)
+* `cloud_topic` (default: `""`)
+* `target_frame` (default: `"/base_link"`)
+* `class_annotations` (default: `"$(find mas_perception_libs)/models/class_annotation_example.yml"`)
+* `kwargs_file` (default: `"$(find mas_perception_libs)/models/image_detector_test_kwargs.yml"`)
+* `detection_module` (default: `"mas_perception_libs"`)
+* `detection_class` (default: `"ImageDetectorTest"`)
+* `plane_fitting_config_file` (default `"$(find mas_perception_libs)/ros/config/plane_fitting_default_configs.yaml"`)
+
+### [`object_detection.launch`](ros/launch/object_detection.launch)
+Launch the `object_detection_action_server` script. Arguments are the same with the script's parameters:
 * `action_name` (default: `"/mas_perception/detect_image"`)
 * `cloud_topic` (default: `""`)
 * `target_frame` (default: `"/base_link"`)
@@ -221,11 +232,13 @@ reconfiguration [PlaneFitting.cfg](ros/config/PlaneFitting.cfg). Default file is
 │   │   ├── cloud_processing_cpp_test.launch
 │   │   ├── cloud_processing_python_test.launch
 │   │   ├── image_detection.launch
+│   │   ├── object_detection.launch
 │   │   ├── image_detection_test.launch
 │   │   └── image_recognition.launch
 │   ├── scripts
 │   │   ├── cloud_processing_python_test
-│   │   ├── image_detection_action_server
+│   │   ├── plane_detection_action_server
+│   │   ├── object_detection_action_server
 │   │   ├── image_detection_test
 │   │   ├── image_recognition_client_test
 │   │   └── image_recognition_server

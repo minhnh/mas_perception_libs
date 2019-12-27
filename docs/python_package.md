@@ -56,6 +56,9 @@ together with [`class_annotation_example.yml`](../models/class_annotation_exampl
 Used by `SceneDetectionActionServer` and in [`image_detection_test`](../ros/scripts/image_detection_test) to detect
 objects in a single image message at a time and publish detection results on a desired topic.
 
+### `TorchImageDetector`
+An instance of `ImageDetectorBase` that runs a PyTorch object detection model.
+
 ## [`image_recognition_service.py`](../ros/src/mas_perception_libs/image_recognition_service.py)
 
 ### `RecognizeImageService`
