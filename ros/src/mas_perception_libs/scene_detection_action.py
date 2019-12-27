@@ -141,8 +141,8 @@ class ObjectDetectionActionServer(object):
             self._filtered_cloud_pub.publish(filtered_cloud)
 
         rospy.loginfo('creating action result and setting success')
-        result = PlaneDetectionActionServer._get_action_result(transformed_cloud_msg, bounding_boxes,
-                                                               classes, confidences)
+        result = ObjectDetectionActionServer._get_action_result(transformed_cloud_msg, bounding_boxes,
+                                                                classes, confidences)
         self._action_server.set_succeeded(result)
 
     @staticmethod
