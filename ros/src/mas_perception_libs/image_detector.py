@@ -287,6 +287,10 @@ class TorchImageDetector(ImageDetectorBase):
 
         predictions = []
         for image in images:
+            # the elements of the input image have type float64, but we convert
+            # them to uint8 since the evaluation is quite slow otherwise
+            image = np.array(image, dtype=np.uint8)
+
             img_tensor = functional.to_tensor(image)
             with torch.no_grad():
                 pred = self._model([img_tensor.to(self._eval_device)])
@@ -303,13 +307,15 @@ class TorchImageDetector(ImageDetectorBase):
                 pred_score = pred_score[:pred_t+1]
 
                 num_detected_objects = len(pred_boxes)
-                for i in range(len(num_detected_objects)):
-                    obj_data_dict = {ImageDetectionKey.CLASS: pred_class[i],
-                                     ImageDetectionKey.CONF: pred_score[i],
-                                     ImageDetectionKey.X_MIN: pred_boxes[i][0][0],
-                                     ImageDetectionKey.Y_MIN: pred_boxes[i][0][1],
-                                     ImageDetectionKey.X_MAX: pred_boxes[i][1][0],
-                                     ImageDetectionKey.Y_MAX: pred_boxes[i][1][1]}
+                for i in range(num_detected_objects):
+                    # the results have numpy types, so we type cast them to
+                    # native Python types before including them in the result
+                    obj_data_dict = {ImageDetectionKey.CLASS: str(pred_class[i]),
+                                     ImageDetectionKey.CONF: float(pred_score[i]),
+                                     ImageDetectionKey.X_MIN: float(pred_boxes[i][0][0]),
+                                     ImageDetectionKey.Y_MIN: float(pred_boxes[i][0][1]),
+                                     ImageDetectionKey.X_MAX: float(pred_boxes[i][1][0]),
+                                     ImageDetectionKey.Y_MAX: float(pred_boxes[i][1][1])}
                     detected_obj_data.append(obj_data_dict)
             predictions.append(detected_obj_data)
         return predictions
