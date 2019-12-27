@@ -70,9 +70,9 @@ Interact with an `mas_perception_msgs/RecognizeImage.srv` service to get image c
 can be found in the script [`image_recognition_server`](../ros/scripts/image_recognition_server), which uses the
 `RecognizeImageService` class above.
 
-## [`object_detector.py`](../ros/src/mas_perception_libs/object_detector.py)
+## [`plane_detector.py`](../ros/src/mas_perception_libs/plane_detector.py)
 
-### `ObjectDetector`
+### `PlaneDetector`
 * Interact with a `mas_perception_msgs/DetectScene.action` action server to get a list of
 planes containing objects.
 * Perform common preprocessing steps on the objects (i.e. create bounding box, transform to desired frame,...).
