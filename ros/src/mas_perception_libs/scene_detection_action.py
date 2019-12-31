@@ -159,13 +159,13 @@ class ObjectDetectionActionServer(object):
             detected_obj = get_obj_msg_from_detection(cloud_msg, box,
                                                       classes[index],
                                                       confidences[index],
-                                                      self.frame_id)
+                                                      cloud_msg.header.frame_id)
 
             box_msg = detected_obj.bounding_box
             rospy.loginfo("Adding object '%s', position (%.3f, %.3f, %.3f), dimensions (%.3f, %.3f, %.3f)"
                           % (classes[index], box_msg.center.x, box_msg.center.y, box_msg.center.z,
                              box_msg.dimensions.x, box_msg.dimensions.y, box_msg.dimensions.z))
-            result.object_list.objects.append(detected_obj)
+            result.objects.objects.append(detected_obj)
         return result
 
 
