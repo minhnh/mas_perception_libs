@@ -286,3 +286,5 @@ def get_obj_msg_from_detection(cloud_msg, bounding_box, category, confidence, fr
     detected_obj.pose.pose.position = box_msg.center
     detected_obj.pose.pose.position.x = mean_coord[0]
     detected_obj.pose.pose.orientation.w = 1.0
+
+    return detected_obj
