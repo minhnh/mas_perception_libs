@@ -10,7 +10,7 @@
     <arg name="plane_fitting_config_file"
          default="$(find mas_perception_libs)/ros/config/plane_fitting_default_configs.yaml" />
 
-    <node pkg="mas_perception_libs" type="image_detection_action_server" name="image_detection_server" output="screen">
+    <node pkg="mas_perception_libs" type="plane_detection_action_server" name="plane_detection_server" output="screen">
         <rosparam file="$(arg plane_fitting_config_file)" command="load"/>
         <param name="action_name" type="string" value="$(arg action_name)" />
         <param name="cloud_topic" type="string" value="$(arg cloud_topic)" />
