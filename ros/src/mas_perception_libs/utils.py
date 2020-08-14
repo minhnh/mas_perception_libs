@@ -8,7 +8,7 @@ from rospkg import RosPack
 import tf
 from cv_bridge import CvBridgeError
 from sensor_msgs.msg import PointCloud2, Image as ImageMsg
-from mas_perception_msgs.msg import PlaneList, Object
+from mas_perception_msgs.msg import PlaneList, Object, ObjectView
 from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_cv_image, _cloud_msg_to_image_msg,\
     _crop_organized_cloud_msg, _crop_cloud_to_xyz, _transform_point_cloud
 from .bounding_box import BoundingBox2D
@@ -279,8 +279,12 @@ def get_obj_msg_from_detection(cloud_msg, bounding_box, category, confidence, fr
     detected_obj.name = category
     detected_obj.category = category
     detected_obj.probability = confidence
-    detected_obj.pointcloud = cropped_cloud
-    detected_obj.rgb_image = cloud_msg_to_image_msg(cropped_cloud)
+
+    object_view = ObjectView()
+    object_view.point_cloud = cropped_cloud
+    object_view.image = cloud_msg_to_image_msg(cropped_cloud)
+    detected_obj.views.append(object_view)
+
     detected_obj.pose.header.frame_id = frame_id
     detected_obj.pose.header.stamp = rospy.Time.now()
     detected_obj.pose.pose.position = box_msg.center
