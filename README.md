@@ -6,6 +6,36 @@ avoid defining commonly used logic in different locations and also to expose C++
 in Python. This means if a functionality is needed in both Python and C++, it should first be developed in C++ and then
 ported to Python.
 
+- [`mas_perception_libs`](#mas_perception_libs)
+  - [Build issues](#build-issues)
+  - [C++ Library](#c-library)
+  - [Python Package](#python-package)
+  - [Executables](#executables)
+    - [`object_detection_action_server`](#object_detection_action_server)
+    - [`plane_detection_action_server`](#plane_detection_action_server)
+    - [`image_detection_test`](#image_detection_test)
+    - [`image_recognition_server`](#image_recognition_server)
+    - [`image_recognition_client_test`](#image_recognition_client_test)
+    - [`cloud_processing_python_test`](#cloud_processing_python_test)
+    - [`cloud_processing_cpp_test`](#cloud_processing_cpp_test)
+  - [Launch Files](#launch-files)
+    - [`plane_detection.launch`](#plane_detectionlaunch)
+    - [`object_detection.launch`](#object_detectionlaunch)
+    - [`image_detection_test.launch`](#image_detection_testlaunch)
+    - [`image_recognition.launch`](#image_recognitionlaunch)
+    - [`cloud_processing_python_test.launch`](#cloud_processing_python_testlaunch)
+    - [`cloud_processing_cpp_test.launch`](#cloud_processing_cpp_testlaunch)
+  - [Directory structure](#directory-structure)
+
+## Build issues
+
+* `numpy` installation may not create a correct symbolic link to the library's include directory in the system, which
+  results in a compilation error about missing header file `numpy/arrayobject.h`. This can be fixed by creating a correct
+  link as follow (this is typical for an Ubuntu machine, please make sure it's appropriate for your own setup):
+  ```
+  # ln -s /usr/local/lib/python2.7/dist-packages/numpy/core/include/numpy /usr/include/numpy
+  ```
+
 ## [C++ Library](docs/cpp_library.md)
 
 Contains shared perception definitions in C++.
