@@ -315,7 +315,8 @@ class TorchImageDetector(ImageDetectorBase):
         detection_threshold: float -- Detection threshold (between 0 and 1)
 
         '''
-        pred_class = [classes[i] for i in list(predictions['labels'].cpu().numpy())]
+        pred_class = [classes[i] if i in classes else 'unknown'
+                      for i in list(predictions['labels'].cpu().numpy())]
         pred_boxes = [[(i[0], i[1]), (i[2], i[3])]
                       for i in list(predictions['boxes'].cpu().detach().numpy())]
         pred_score = list(predictions['scores'].cpu().detach().numpy())
