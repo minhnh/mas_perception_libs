@@ -293,29 +293,50 @@ class TorchImageDetector(ImageDetectorBase):
 
             img_tensor = functional.to_tensor(image)
             with torch.no_grad():
-                pred = self._model([img_tensor.to(self._eval_device)])
-            pred_class = [self._classes[i] for i in list(pred[0]['labels'].cpu().numpy())]
-            pred_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(pred[0]['boxes'].cpu().detach().numpy())]
-            pred_score = list(pred[0]['scores'].cpu().detach().numpy())
-            pred_t = [i for i, x in enumerate(pred_score) if x > self._detection_threshold]
-
-            detected_obj_data = []
-            if pred_t:
-                pred_t = pred_t[-1]
-                pred_boxes = pred_boxes[:pred_t+1]
-                pred_class = pred_class[:pred_t+1]
-                pred_score = pred_score[:pred_t+1]
-
-                num_detected_objects = len(pred_boxes)
-                for i in range(num_detected_objects):
-                    # the results have numpy types, so we type cast them to
-                    # native Python types before including them in the result
-                    obj_data_dict = {ImageDetectionKey.CLASS: str(pred_class[i]),
-                                     ImageDetectionKey.CONF: float(pred_score[i]),
-                                     ImageDetectionKey.X_MIN: float(pred_boxes[i][0][0]),
-                                     ImageDetectionKey.Y_MIN: float(pred_boxes[i][0][1]),
-                                     ImageDetectionKey.X_MAX: float(pred_boxes[i][1][0]),
-                                     ImageDetectionKey.Y_MAX: float(pred_boxes[i][1][1])}
-                    detected_obj_data.append(obj_data_dict)
+                predictions = self._model([img_tensor.to(self._eval_device)])
+            detected_obj_data = TorchImageDetector.process_predictions(predictions[0],
+                                                                       self._classes,
+                                                                       self._detection_threshold)
             predictions.append(detected_obj_data)
         return predictions
+
+    @staticmethod
+    def process_predictions(predictions, classes, detection_threshold):
+        '''Returns a list of dictionaries describing all object detections in
+        "predictions". Each dictionary contains six entries:
+        * the object class
+        * the prediction confidence
+        * four entries for the bounding box prediction described through min/max pixels over x and y
+
+        predictions: Dict[str, Tensor] -- A dictionary containing three entries -
+                                          ("boxes", "labels", and "scores") - which
+                                          describe object predictions
+        classes: Dict[int, str] -- A map of class labels to class names
+        detection_threshold: float -- Detection threshold (between 0 and 1)
+
+        '''
+        pred_class = [classes[i] for i in list(predictions['labels'].cpu().numpy())]
+        pred_boxes = [[(i[0], i[1]), (i[2], i[3])]
+                      for i in list(predictions['boxes'].cpu().detach().numpy())]
+        pred_score = list(predictions['scores'].cpu().detach().numpy())
+        pred_t = [i for i, x in enumerate(pred_score) if x > detection_threshold]
+
+        detected_obj_data = []
+        if pred_t:
+            pred_t = pred_t[-1]
+            pred_boxes = pred_boxes[:pred_t+1]
+            pred_class = pred_class[:pred_t+1]
+            pred_score = pred_score[:pred_t+1]
+
+            num_detected_objects = len(pred_boxes)
+            for i in range(num_detected_objects):
+                # the results have numpy types, so we type cast them to
+                # native Python types before including them in the result
+                obj_data_dict = {ImageDetectionKey.CLASS: str(pred_class[i]),
+                                 ImageDetectionKey.CONF: float(pred_score[i]),
+                                 ImageDetectionKey.X_MIN: float(pred_boxes[i][0][0]),
+                                 ImageDetectionKey.Y_MIN: float(pred_boxes[i][0][1]),
+                                 ImageDetectionKey.X_MAX: float(pred_boxes[i][1][0]),
+                                 ImageDetectionKey.Y_MAX: float(pred_boxes[i][1][1])}
+                detected_obj_data.append(obj_data_dict)
+        return detected_obj_data
