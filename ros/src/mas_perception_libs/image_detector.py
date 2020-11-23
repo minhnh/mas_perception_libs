@@ -250,7 +250,8 @@ class TorchImageDetector(ImageDetectorBase):
 
     def __init__(self, **kwargs):
         import torch
-        self._eval_device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        self._eval_device = torch.device('cuda') if torch.cuda.is_available() \
+                                                 else torch.device('cpu')
         super(TorchImageDetector, self).__init__(**kwargs)
 
     def load_model(self, **kwargs):
@@ -266,20 +267,28 @@ class TorchImageDetector(ImageDetectorBase):
         rospy.loginfo('detection_instantiator: %s', detector_instantiator)
         rospy.loginfo('detection_threshold: %f', self._detection_threshold)
         rospy.loginfo('model_path: %s', model_path)
-        if not model_path:
-            raise ValueError('[load_model] model_path not specified')
+        try:
+            if model_path is None:
+                rospy.logwarn('[load_model] model_path not specified; loading a pretrained model')
 
-        rospy.loginfo('[load_model] Instantiating model')
-        detector_instantiator = getattr(import_module(detector_module),
-                                        detector_instantiator)
-        self._model = detector_instantiator(len(self._classes.keys()))
+                detector_instantiator = getattr(import_module(detector_module),
+                                                detector_instantiator)
+                self._model = detector_instantiator(pretrained=True)
+            else:
+                rospy.loginfo('[load_model] Instantiating model')
+                detector_instantiator = getattr(import_module(detector_module),
+                                                detector_instantiator)
+                self._model = detector_instantiator(len(self._classes.keys()))
 
-        rospy.loginfo('[load_model] Loading model parameters from %s', model_path)
-        self._model.load_state_dict(torch.load(model_path, map_location=self._eval_device))
-        rospy.loginfo('[load_model] Successfully loaded model')
+                rospy.loginfo('[load_model] Loading model parameters from %s', model_path)
+                self._model.load_state_dict(torch.load(model_path, map_location=self._eval_device))
+                rospy.loginfo('[load_model] Successfully loaded model')
 
-        self._model.eval()
-        self._model.to(self._eval_device)
+            self._model.eval()
+            self._model.to(self._eval_device)
+        except TypeError as exc:
+            rospy.logerr('[load_model] Error loading model')
+            raise
 
     def _detect(self, images, orig_img_sizes):
         import torch
@@ -292,9 +301,10 @@ class TorchImageDetector(ImageDetectorBase):
             image = np.array(image, dtype=np.uint8)
 
             img_tensor = functional.to_tensor(image)
+            model_predictions = None
             with torch.no_grad():
-                predictions = self._model([img_tensor.to(self._eval_device)])
-            detected_obj_data = TorchImageDetector.process_predictions(predictions[0],
+                model_predictions = self._model([img_tensor.to(self._eval_device)])
+            detected_obj_data = TorchImageDetector.process_predictions(model_predictions[0],
                                                                        self._classes,
                                                                        self._detection_threshold)
             predictions.append(detected_obj_data)
