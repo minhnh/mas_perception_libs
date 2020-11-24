@@ -13,7 +13,7 @@ class PlaneDetector(object):
     _plane_list = PlaneList()   # type: PlaneList
     _timeout = None             # type: rospy.Duration
 
-    def __init__(self, detection_action_name, timeout=20):
+    def __init__(self, detection_action_name, timeout=30):
         """
         :param detection_action_name: name of action server
         :param timeout: maximum to wait for the action to start or process the goal
