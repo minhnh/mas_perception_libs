@@ -252,7 +252,7 @@ def get_obj_msg_from_detection(cloud_msg, bounding_box, category, confidence, fr
 
     Keyword arguments:
     cloud_msg: sensor_msgs.msg.PointCloud2
-    bounding_box: Tuple[float, float, float, float] - (xmin, ymin, width, height)
+    bounding_box: BoundingBox2D
     category: str
     confidence: float -- detection confidence
     frame_id: str -- frame of the resulting object
@@ -290,5 +290,10 @@ def get_obj_msg_from_detection(cloud_msg, bounding_box, category, confidence, fr
     detected_obj.pose.pose.position = box_msg.center
     detected_obj.pose.pose.position.x = mean_coord[0]
     detected_obj.pose.pose.orientation.w = 1.0
+
+    detected_obj.roi.x_offset = int(bounding_box.x)
+    detected_obj.roi.y_offset = int(bounding_box.y)
+    detected_obj.roi.width = int(bounding_box.width)
+    detected_obj.roi.height = int(bounding_box.height)
 
     return detected_obj

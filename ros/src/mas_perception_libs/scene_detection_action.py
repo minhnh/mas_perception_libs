@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import os
+import copy
 import numpy as np
 import rospy
 import tf
@@ -124,6 +125,7 @@ class ObjectDetectionActionServer(object):
 
         rospy.loginfo('Cloud message received; detecting objects...')
         img_msg = cloud_msg_to_image_msg(cloud_msg)
+        original_img_msg = copy.deepcopy(img_msg)
         try:
             bounding_boxes, classes, confidences = self._detector_handler.process_image_msg(img_msg)
         except RuntimeError as e:
@@ -143,6 +145,7 @@ class ObjectDetectionActionServer(object):
         rospy.loginfo('creating action result and setting success')
         result = ObjectDetectionActionServer._get_action_result(transformed_cloud_msg, bounding_boxes,
                                                                 classes, confidences)
+        result.image = original_img_msg
         self._action_server.set_succeeded(result)
 
     @staticmethod
