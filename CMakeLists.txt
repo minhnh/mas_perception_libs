@@ -77,8 +77,6 @@ target_link_libraries(${PROJECT_NAME}
 ###################################
 # python wrapper for cpp libraries
 add_library(_cpp_wrapper SHARED
-  common/src/init_numpy_api.cpp
-  common/src/pyboost_cv3_converter.cpp
   ros/src/bounding_box_wrapper.cpp
   ros/src/boost_python_module.cpp
 )
