@@ -8,7 +8,6 @@
 #define MAS_PERCEPTION_LIBS_POINT_CLOUD_UTILS_ROS_H
 
 #include <string>
-#include <opencv/cv.h>
 #include <std_msgs/Header.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <visualization_msgs/Marker.h>

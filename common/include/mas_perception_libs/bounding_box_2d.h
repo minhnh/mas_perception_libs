@@ -11,7 +11,7 @@
 
 #include <string>
 #include <vector>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 namespace mas_perception_libs
 {

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(mas_perception_libs)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -17,8 +17,11 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(PCL 1.7 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS python)
-find_package(PythonLibs 2.7 REQUIRED)
+set(PY_MAJOR 3)
+set(PY_MINOR 8)
+set(Boost_NO_BOOST_CMAKE ON)
+find_package(Boost REQUIRED COMPONENTS python${PY_MAJOR}${PY_MINOR})
+find_package(PythonLibs ${PY_MAJOR}.${PY_MINOR} REQUIRED)
 find_package(OpenCV REQUIRED)
 
 catkin_python_setup()

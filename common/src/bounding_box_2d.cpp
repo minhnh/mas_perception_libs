@@ -41,7 +41,7 @@ drawLabeledBoxes(cv::Mat &pImage, std::vector<BoundingBox2D> pBoundingBoxes, int
         // draw label with background
         cv::Point textTopLeft = cv::Point(boxRect.x, boxRect.y - textSize.height);
         cv::Point textBottomRight = cv::Point(boxRect.x + textSize.width, boxRect.y + baseline);
-        cv::rectangle(pImage, textTopLeft, textBottomRight, pBoundingBox.mColor, CV_FILLED);
+        cv::rectangle(pImage, textTopLeft, textBottomRight, pBoundingBox.mColor, cv::FILLED);
         cv::putText(pImage, pBoundingBox.mLabel, cv::Point(boxRect.x, boxRect.y),
                     cv::FONT_HERSHEY_PLAIN, pFontScale, CV_RGB(255, 255, 555), 1);
     }
