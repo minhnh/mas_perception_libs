@@ -24,6 +24,7 @@
   <build_export_depend>message_runtime</build_export_depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>image_view</exec_depend>
+  <exec_depend>ros_numpy</exec_depend>
 
   <test_depend>rosunit</test_depend>
 

@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_geometry
   pcl_ros
+  ros_numpy
   mas_perception_msgs
 )
 
