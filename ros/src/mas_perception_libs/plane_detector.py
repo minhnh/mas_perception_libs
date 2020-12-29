@@ -5,7 +5,7 @@ from geometry_msgs.msg import PointStamped
 from mas_perception_msgs.msg import PlaneList, DetectSceneGoal, DetectSceneAction
 
 
-class ObjectDetector(object):
+class PlaneDetector(object):
     """
     Interacts with a DetectScene action server to detect objects and process them
     """
@@ -13,7 +13,7 @@ class ObjectDetector(object):
     _plane_list = PlaneList()   # type: PlaneList
     _timeout = None             # type: rospy.Duration
 
-    def __init__(self, detection_action_name, timeout=20):
+    def __init__(self, detection_action_name, timeout=30):
         """
         :param detection_action_name: name of action server
         :param timeout: maximum to wait for the action to start or process the goal
@@ -69,7 +69,7 @@ class ObjectDetector(object):
                 plane.plane_point = transformed_ps.point
 
         if group_planes:
-            planes = ObjectDetector.group_planes_by_height(self._plane_list.planes)
+            planes = PlaneDetector.group_planes_by_height(self._plane_list.planes)
         else:
             planes = self._plane_list.planes
 

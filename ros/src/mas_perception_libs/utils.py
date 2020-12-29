@@ -8,7 +8,7 @@ from rospkg import RosPack
 import tf
 from cv_bridge import CvBridgeError
 from sensor_msgs.msg import PointCloud2, Image as ImageMsg
-from mas_perception_msgs.msg import PlaneList
+from mas_perception_msgs.msg import PlaneList, Object, ObjectView
 from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_cv_image, _cloud_msg_to_image_msg,\
     _crop_organized_cloud_msg, _crop_cloud_to_xyz, _transform_point_cloud
 from .bounding_box import BoundingBox2D
@@ -244,3 +244,56 @@ def transform_point_cloud(cloud_msg, tf_matrix, target_frame):
     transformed_cloud = from_cpp(_transform_point_cloud(to_cpp(cloud_msg), tf_matrix), PointCloud2)
     transformed_cloud.header.frame_id = target_frame
     return transformed_cloud
+
+def get_obj_msg_from_detection(cloud_msg, bounding_box, category, confidence, frame_id):
+    '''Creates an mas_perception_msgs.msg.Object message from the given
+    information about an object detected in an image generated from the
+    point cloud.
+
+    Keyword arguments:
+    cloud_msg: sensor_msgs.msg.PointCloud2
+    bounding_box: BoundingBox2D
+    category: str
+    confidence: float -- detection confidence
+    frame_id: str -- frame of the resulting object
+
+    '''
+    cropped_cloud = crop_organized_cloud_msg(cloud_msg, bounding_box)
+    obj_coords = crop_cloud_to_xyz(cropped_cloud, BoundingBox2D(box_geometry=(0, 0, cropped_cloud.width,
+                                                                              cropped_cloud.height)))
+    obj_coords = np.reshape(obj_coords, (-1, 3))
+    min_coord = np.nanmin(obj_coords, axis=0)
+    max_coord = np.nanmax(obj_coords, axis=0)
+    mean_coord = np.nanmean(obj_coords, axis=0)
+
+    # fill object geometry info
+    detected_obj = Object()
+    detected_obj.bounding_box.center.x = mean_coord[0]
+    detected_obj.bounding_box.center.y = mean_coord[1]
+    detected_obj.bounding_box.center.z = mean_coord[2]
+    detected_obj.bounding_box.dimensions.x = max_coord[0] - min_coord[0]
+    detected_obj.bounding_box.dimensions.y = max_coord[1] - min_coord[1]
+    detected_obj.bounding_box.dimensions.z = max_coord[2] - min_coord[2]
+    box_msg = detected_obj.bounding_box
+
+    detected_obj.name = category
+    detected_obj.category = category
+    detected_obj.probability = confidence
+
+    object_view = ObjectView()
+    object_view.point_cloud = cropped_cloud
+    object_view.image = cloud_msg_to_image_msg(cropped_cloud)
+    detected_obj.views.append(object_view)
+
+    detected_obj.pose.header.frame_id = frame_id
+    detected_obj.pose.header.stamp = rospy.Time.now()
+    detected_obj.pose.pose.position = box_msg.center
+    detected_obj.pose.pose.position.x = mean_coord[0]
+    detected_obj.pose.pose.orientation.w = 1.0
+
+    detected_obj.roi.x_offset = int(bounding_box.x)
+    detected_obj.roi.y_offset = int(bounding_box.y)
+    detected_obj.roi.width = int(bounding_box.width)
+    detected_obj.roi.height = int(bounding_box.height)
+
+    return detected_obj

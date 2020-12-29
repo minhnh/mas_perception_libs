@@ -6,6 +6,36 @@ avoid defining commonly used logic in different locations and also to expose C++
 in Python. This means if a functionality is needed in both Python and C++, it should first be developed in C++ and then
 ported to Python.
 
+- [`mas_perception_libs`](#mas_perception_libs)
+  - [Build issues](#build-issues)
+  - [C++ Library](#c-library)
+  - [Python Package](#python-package)
+  - [Executables](#executables)
+    - [`object_detection_action_server`](#object_detection_action_server)
+    - [`plane_detection_action_server`](#plane_detection_action_server)
+    - [`image_detection_test`](#image_detection_test)
+    - [`image_recognition_server`](#image_recognition_server)
+    - [`image_recognition_client_test`](#image_recognition_client_test)
+    - [`cloud_processing_python_test`](#cloud_processing_python_test)
+    - [`cloud_processing_cpp_test`](#cloud_processing_cpp_test)
+  - [Launch Files](#launch-files)
+    - [`plane_detection.launch`](#plane_detectionlaunch)
+    - [`object_detection.launch`](#object_detectionlaunch)
+    - [`image_detection_test.launch`](#image_detection_testlaunch)
+    - [`image_recognition.launch`](#image_recognitionlaunch)
+    - [`cloud_processing_python_test.launch`](#cloud_processing_python_testlaunch)
+    - [`cloud_processing_cpp_test.launch`](#cloud_processing_cpp_testlaunch)
+  - [Directory structure](#directory-structure)
+
+## Build issues
+
+* `numpy` installation may not create a correct symbolic link to the library's include directory in the system, which
+  results in a compilation error about missing header file `numpy/arrayobject.h`. This can be fixed by creating a correct
+  link as follow (this is typical for an Ubuntu machine, please make sure it's appropriate for your own setup):
+  ```
+  # ln -s /usr/local/lib/python2.7/dist-packages/numpy/core/include/numpy /usr/include/numpy
+  ```
+
 ## [C++ Library](docs/cpp_library.md)
 
 Contains shared perception definitions in C++.
@@ -16,8 +46,25 @@ Contains shared perception definitions in Python.
 
 ## Executables
 
-### [`image_detection_action_server`](ros/scripts/image_detection_action_server)
-Run an instance of `ImageDetectionActionServer` (described in [Python Documentation](docs/python_package.md)).
+### [`object_detection_action_server`](ros/scripts/object_detection_action_server)
+Run an instance of `ObjectDetectionActionServer` (described in [Python Documentation](docs/python_package.md)).
+
+Parameters:
+* `action_name`: name of action server
+* `cloud_topic`: name of topic which supply `sensor_msgs/PointCloud2` messages
+* `target_frame`: name of reference frame which the object poses will be transformed to
+* `class_annotations`: YAML file which maps numeric class values to class names, used by the
+[`ImageDetectorBase` class](docs/python_package.md) to configure the detection model. An example of this file is
+[`class_annotation_example.yml`](models/class_annotation_example.yml).
+* `kwargs_file`: YAML file which is used by the [`ImageDetectorBase` class](docs/python_package.md) to specify
+additional parameters needed to configure the detection model. An example is
+[`image_detector_test_kwargs.yml`](models/image_detector_test_kwargs.yml).
+* `detection_module`: name of the module containing the `ImageDetectorBase` extension to import.
+* `detection_class`: name of the extension of the `ImageDetectorBase` class to import.
+
+
+### [`plane_detection_action_server`](ros/scripts/plane_detection_action_server)
+Run an instance of `PlaneDetectionActionServer` (described in [Python Documentation](docs/python_package.md)).
 
 Parameters:
 * `action_name`: name of action server
@@ -39,7 +86,7 @@ Node for testing image detection models. Can test images from a directory, a `se
 
 Parameters:
 * `class_annotations`, `kwargs_file`, `detection_module`, and `detection_class`: parameters for `ImageDetectorBase`
-class similar to ones described above for `image_detection_action_server`.
+class similar to ones described above for `object_detection_action_server` and `plane_detection_action_server`.
 * `result_topic`: `sensor_msgs/Image` topic which visualized detection results are published.
 * `image_directory`: if specified will ignore other image sources and read images from this directory for testing.
 * `cloud_topic`: if specified and `image_directory` is not specified will extract images from `sensor_msgs/PointCloud2`
@@ -112,8 +159,19 @@ dynamic reconfiguration defined in [PlaneFitting.cfg](ros/config/PlaneFitting.cf
 
 ## Launch Files
 
-### [`image_detection.launch`](ros/launch/image_detection.launch)
-Launch the `image_detection_action_server` script. Arguments are the same with the script's parameters:
+### [`plane_detection.launch`](ros/launch/plane_detection.launch)
+Launch the `plane_detection_action_server` script. Arguments are the same with the script's parameters:
+* `action_name` (default: `"/mas_perception/detect_image"`)
+* `cloud_topic` (default: `""`)
+* `target_frame` (default: `"/base_link"`)
+* `class_annotations` (default: `"$(find mas_perception_libs)/models/class_annotation_example.yml"`)
+* `kwargs_file` (default: `"$(find mas_perception_libs)/models/image_detector_test_kwargs.yml"`)
+* `detection_module` (default: `"mas_perception_libs"`)
+* `detection_class` (default: `"ImageDetectorTest"`)
+* `plane_fitting_config_file` (default `"$(find mas_perception_libs)/ros/config/plane_fitting_default_configs.yaml"`)
+
+### [`object_detection.launch`](ros/launch/object_detection.launch)
+Launch the `object_detection_action_server` script. Arguments are the same with the script's parameters:
 * `action_name` (default: `"/mas_perception/detect_image"`)
 * `cloud_topic` (default: `""`)
 * `target_frame` (default: `"/base_link"`)
@@ -204,11 +262,13 @@ reconfiguration [PlaneFitting.cfg](ros/config/PlaneFitting.cfg). Default file is
 │   │   ├── cloud_processing_cpp_test.launch
 │   │   ├── cloud_processing_python_test.launch
 │   │   ├── image_detection.launch
+│   │   ├── object_detection.launch
 │   │   ├── image_detection_test.launch
 │   │   └── image_recognition.launch
 │   ├── scripts
 │   │   ├── cloud_processing_python_test
-│   │   ├── image_detection_action_server
+│   │   ├── plane_detection_action_server
+│   │   ├── object_detection_action_server
 │   │   ├── image_detection_test
 │   │   ├── image_recognition_client_test
 │   │   └── image_recognition_server

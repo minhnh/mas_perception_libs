@@ -44,7 +44,7 @@ Abstract class for detecting things in images.
     in the `model_kwargs_file` passed into the class constructor. An example of this file is
     [`image_detector_test_kwargs.yml`](../models/image_detector_test_kwargs.yml).
     - `_detect`: perform detection on a list of `sensor_msgs/Image` objects using the detection model.
-* Extension of this class can be used with `SingleImageDetectionHandler`, which is used in `ImageDetectionActionServer`
+* Extension of this class can be used with `SingleImageDetectionHandler`, which is used in `PlaneDetectionActionServer`
 and the test script [`image_detection_test`](../ros/scripts/image_detection_test) for detecting in images.
 
 ### `ImageDetectorTest`
@@ -55,6 +55,9 @@ together with [`class_annotation_example.yml`](../models/class_annotation_exampl
 ### `SingleImageDetectionHandler`
 Used by `SceneDetectionActionServer` and in [`image_detection_test`](../ros/scripts/image_detection_test) to detect
 objects in a single image message at a time and publish detection results on a desired topic.
+
+### `TorchImageDetector`
+An instance of `ImageDetectorBase` that runs a PyTorch object detection model.
 
 ## [`image_recognition_service.py`](../ros/src/mas_perception_libs/image_recognition_service.py)
 
@@ -67,9 +70,9 @@ Interact with an `mas_perception_msgs/RecognizeImage.srv` service to get image c
 can be found in the script [`image_recognition_server`](../ros/scripts/image_recognition_server), which uses the
 `RecognizeImageService` class above.
 
-## [`object_detector.py`](../ros/src/mas_perception_libs/object_detector.py)
+## [`plane_detector.py`](../ros/src/mas_perception_libs/plane_detector.py)
 
-### `ObjectDetector`
+### `PlaneDetector`
 * Interact with a `mas_perception_msgs/DetectScene.action` action server to get a list of
 planes containing objects.
 * Perform common preprocessing steps on the objects (i.e. create bounding box, transform to desired frame,...).
@@ -90,7 +93,10 @@ action specifications in `mas_perception_msgs/DetectScene.action`. An extension 
 * `_initialize`: initialization procedures before starting the action servers (i.e. loading models).
 * `_execute_cb`: perform object detection and respond to the action client.
 
-### `ImageDetectionActionServer`
+### `ObjectDetectionActionServer`
+Uses `SingleImageDetectionHandler` and `ImageDetectorBase` for detecting objects in an image extracted from a `sensor_msgs/PointCloud2` message.
+
+### `PlaneDetectionActionServer`
 An extension of `SceneDetectionActionServer` which uses `SingleImageDetectionHandler` and `ImageDetectorBase` for detecting
 from an image extracted from a `sensor_msgs/PointCloud2` message, while also fitting planes in the clouds.
 

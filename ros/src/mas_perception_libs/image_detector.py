@@ -1,3 +1,5 @@
+from importlib import import_module
+
 import os
 from abc import ABCMeta, abstractmethod
 import yaml
@@ -240,3 +242,112 @@ class SingleImageDetectionHandler(object):
             self._result_pub.publish(drawn_img_msg)
 
         return bounding_boxes, classes, confidences
+
+class TorchImageDetector(ImageDetectorBase):
+    _model = None
+    _detection_threshold = 0.
+    _eval_device = None
+
+    def __init__(self, **kwargs):
+        import torch
+        self._eval_device = torch.device('cuda') if torch.cuda.is_available() \
+                                                 else torch.device('cpu')
+        super(TorchImageDetector, self).__init__(**kwargs)
+
+    def load_model(self, **kwargs):
+        import torch
+
+        detector_module = kwargs.get('detector_module', None)
+        detector_instantiator = kwargs.get('detector_instantiator', None)
+        self._detection_threshold = kwargs.get('detection_threshold', 0.)
+        model_path = kwargs.get('model_path', None)
+
+        rospy.loginfo('[load_model] Received the following model parameters:')
+        rospy.loginfo('detection_module: %s', detector_module)
+        rospy.loginfo('detection_instantiator: %s', detector_instantiator)
+        rospy.loginfo('detection_threshold: %f', self._detection_threshold)
+        rospy.loginfo('model_path: %s', model_path)
+        try:
+            if model_path is None:
+                rospy.logwarn('[load_model] model_path not specified; loading a pretrained model')
+
+                detector_instantiator = getattr(import_module(detector_module),
+                                                detector_instantiator)
+                self._model = detector_instantiator(pretrained=True)
+            else:
+                rospy.loginfo('[load_model] Instantiating model')
+                detector_instantiator = getattr(import_module(detector_module),
+                                                detector_instantiator)
+                self._model = detector_instantiator(len(self._classes.keys()))
+
+                rospy.loginfo('[load_model] Loading model parameters from %s', model_path)
+                self._model.load_state_dict(torch.load(model_path, map_location=self._eval_device))
+                rospy.loginfo('[load_model] Successfully loaded model')
+
+            self._model.eval()
+            self._model.to(self._eval_device)
+        except TypeError as exc:
+            rospy.logerr('[load_model] Error loading model')
+            raise
+
+    def _detect(self, images, orig_img_sizes):
+        import torch
+        from torchvision.transforms import functional
+
+        predictions = []
+        for image in images:
+            # the elements of the input image have type float64, but we convert
+            # them to uint8 since the evaluation is quite slow otherwise
+            image = np.array(image, dtype=np.uint8)
+
+            img_tensor = functional.to_tensor(image)
+            model_predictions = None
+            with torch.no_grad():
+                model_predictions = self._model([img_tensor.to(self._eval_device)])
+            detected_obj_data = TorchImageDetector.process_predictions(model_predictions[0],
+                                                                       self._classes,
+                                                                       self._detection_threshold)
+            predictions.append(detected_obj_data)
+        return predictions
+
+    @staticmethod
+    def process_predictions(predictions, classes, detection_threshold):
+        '''Returns a list of dictionaries describing all object detections in
+        "predictions". Each dictionary contains six entries:
+        * the object class
+        * the prediction confidence
+        * four entries for the bounding box prediction described through min/max pixels over x and y
+
+        predictions: Dict[str, Tensor] -- A dictionary containing three entries -
+                                          ("boxes", "labels", and "scores") - which
+                                          describe object predictions
+        classes: Dict[int, str] -- A map of class labels to class names
+        detection_threshold: float -- Detection threshold (between 0 and 1)
+
+        '''
+        pred_class = [classes[i] if i in classes else 'unknown'
+                      for i in list(predictions['labels'].cpu().numpy())]
+        pred_boxes = [[(i[0], i[1]), (i[2], i[3])]
+                      for i in list(predictions['boxes'].cpu().detach().numpy())]
+        pred_score = list(predictions['scores'].cpu().detach().numpy())
+        pred_t = [i for i, x in enumerate(pred_score) if x > detection_threshold]
+
+        detected_obj_data = []
+        if pred_t:
+            pred_t = pred_t[-1]
+            pred_boxes = pred_boxes[:pred_t+1]
+            pred_class = pred_class[:pred_t+1]
+            pred_score = pred_score[:pred_t+1]
+
+            num_detected_objects = len(pred_boxes)
+            for i in range(num_detected_objects):
+                # the results have numpy types, so we type cast them to
+                # native Python types before including them in the result
+                obj_data_dict = {ImageDetectionKey.CLASS: str(pred_class[i]),
+                                 ImageDetectionKey.CONF: float(pred_score[i]),
+                                 ImageDetectionKey.X_MIN: float(pred_boxes[i][0][0]),
+                                 ImageDetectionKey.Y_MIN: float(pred_boxes[i][0][1]),
+                                 ImageDetectionKey.X_MAX: float(pred_boxes[i][1][0]),
+                                 ImageDetectionKey.Y_MAX: float(pred_boxes[i][1][1])}
+                detected_obj_data.append(obj_data_dict)
+        return detected_obj_data
