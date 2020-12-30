@@ -144,7 +144,8 @@ install(TARGETS _cpp_wrapper
 
 # executables
 install(PROGRAMS
-  ros/scripts/image_detection_action_server
+  ros/scripts/object_detection_action_server
+  ros/scripts/plane_detection_action_server
   ros/scripts/image_detection_test
   ros/scripts/image_recognition_client_test
   ros/scripts/image_recognition_server
