@@ -18,10 +18,14 @@ def to_cpp(msg):
 def from_cpp(serial_msg, cls):
     """
     Deserialize strings to ROS messages
-    :param serial_msg: serialized ROS message
+    :param serial_msg: memory view or bytes of serialized ROS message
     :type serial_msg: str
     :param cls: ROS message class
     :return: deserialized ROS message
     """
     msg = cls()
-    return msg.deserialize(serial_msg)
+    if isinstance(serial_msg, memoryview):
+        return msg.deserialize(serial_msg.tobytes())
+    if isinstance(serial_msg, bytes):
+        return msg.deserialize(serial_msg)
+    raise TypeError("'serial_msg' has unexpected type: " + type(serial_msg))

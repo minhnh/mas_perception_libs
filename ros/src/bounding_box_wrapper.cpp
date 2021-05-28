@@ -22,9 +22,9 @@ using BoundingBoxMsg = mas_perception_msgs::BoundingBox;
 
 namespace mas_perception_libs
 {
-    BoundingBoxWrapper::BoundingBoxWrapper(const std::string &pSerialCloud, const bp::list &pNormal)
+    BoundingBoxWrapper::BoundingBoxWrapper(const bp::object & pSerialCloud, const bp::list &pNormal)
     {
-        sensor_msgs::PointCloud2 rosCloud = from_python<sensor_msgs::PointCloud2>(std::move(pSerialCloud));
+        sensor_msgs::PointCloud2 rosCloud = from_python<sensor_msgs::PointCloud2>(pSerialCloud);
 
         bp::ssize_t len = bp::len(pNormal);
         if (len != 3)
@@ -47,10 +47,9 @@ namespace mas_perception_libs
 
     BoundingBoxWrapper::~BoundingBoxWrapper() = default;
 
-    std::string BoundingBoxWrapper::getPose()
+    bp::object BoundingBoxWrapper::getPose()
     {
-        std::string serialPose = to_python(mPose);
-        return serialPose;
+        return to_python(mPose);
     }
 
     void BoundingBoxWrapper::calculatePose(const std_msgs::Header &header)
@@ -88,7 +87,7 @@ namespace mas_perception_libs
         mPose.pose.orientation.w = q.w();
     }
 
-    std::string BoundingBoxWrapper::getRosMsg()
+    bp::object BoundingBoxWrapper::getRosMsg()
     {
         BoundingBoxMsg boxMsg;
         boxMsg.center = mPose.pose.position;

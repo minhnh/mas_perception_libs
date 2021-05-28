@@ -98,21 +98,20 @@ public:
     /*!
      * @brief wrapper to expose in Python a function to filter point clouds using the passthrough and voxel filters
      */
-    std::string
-    filterCloud(const std::string &pSerialCloud)
+    bp::object
+    filterCloud(const bp::object & pSerialCloud)
     {
         auto cloudMsg = from_python<sensor_msgs::PointCloud2>(pSerialCloud);
         sensor_msgs::PointCloud2::Ptr cloudMsgPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloudMsg);
         auto filteredCloudPtr = PlaneSegmenterROS::filterCloud(cloudMsgPtr);
-        std::string serializedMsg = to_python(*filteredCloudPtr);
-        return serializedMsg;
+        return to_python(*filteredCloudPtr);
     }
 
     /*!
      * @brief wrapper to expose in Python a function to fit plane(s) from point clouds
      */
     bp::tuple
-    findPlanes(const std::string &pSerialCloud)
+    findPlanes(const bp::object & pSerialCloud)
     {
         auto cloudMsg = from_python<sensor_msgs::PointCloud2>(pSerialCloud);
         sensor_msgs::PointCloud2::Ptr cloudMsgPtr = boost::make_shared<sensor_msgs::PointCloud2>(cloudMsg);
@@ -128,9 +127,9 @@ public:
             // TODO(minhnh) make actual Python exceptions
             throw;
         }
-        std::string serializedFilteredCloud = to_python(*filteredCloudPtr);
-        std::string serializedPlanes = to_python(*planeListPtr);
-        return bp::make_tuple<std::string, std::string>(serializedPlanes, serializedFilteredCloud);
+        auto serializedFilteredCloud = to_python(*filteredCloudPtr);
+        auto serializedPlanes = to_python(*planeListPtr);
+        return bp::make_tuple<bp::object, bp::object>(serializedPlanes, serializedFilteredCloud);
     }
 };
 
@@ -169,9 +168,9 @@ struct BoundingBox2DWrapper : BoundingBox2D
  * @brief crops object images from a ROS image messages using ImageBoundingBox. Legacy from mcr_scene_segmentation.
  */
 bp::tuple
-getCropsAndBoundingBoxes(const std::string &pSerialImageMsg, const std::string &pSerialCameraInfo,
-                         const std::string &pSerialBoundingBoxList)
-{
+getCropsAndBoundingBoxes(
+    const bp::object & pSerialImageMsg, const bp::object & pSerialCameraInfo, const bp::object & pSerialBoundingBoxList
+) {
     const sensor_msgs::Image &imageMsg = from_python<sensor_msgs::Image>(pSerialImageMsg);
     const sensor_msgs::CameraInfo &camInfo = from_python<sensor_msgs::CameraInfo>(pSerialCameraInfo);
     const mas_perception_msgs::BoundingBoxList &boundingBoxList
@@ -180,7 +179,7 @@ getCropsAndBoundingBoxes(const std::string &pSerialImageMsg, const std::string &
 
     // serialize image list
     const mas_perception_msgs::ImageList &imageList = mImgBoundingBox.cropped_image_list();
-    std::string serialImageList = to_python(imageList);
+    auto serialImageList = to_python(imageList);
 
     // convert vector to bp::list
     const std::vector<std::vector<cv::Point2f>> &boxVerticesVect = mImgBoundingBox.box_vertices_vector();
@@ -199,7 +198,7 @@ getCropsAndBoundingBoxes(const std::string &pSerialImageMsg, const std::string &
     }
 
     // return result tuple
-    return bp::make_tuple<std::string, bp::list>(serialImageList, boxVerticesList);
+    return bp::make_tuple<bp::object, bp::list>(serialImageList, boxVerticesList);
 }
 
 /*!
@@ -224,8 +223,8 @@ fitBoxToImageWrapper(const bp::tuple &pImageSizeTuple, BoundingBox2DWrapper pBox
  * @brief Python wrapper for the PCL conversion function toROSMsg which converts a sensor_msgs/PointCloud2 object to a
  *        sensor_msgs/Image object
  */
-std::string
-cloudMsgToImageMsgWrapper(const std::string &pSerialCloud)
+bp::object
+cloudMsgToImageMsgWrapper(const bp::object & pSerialCloud)
 {
     // unserialize cloud message
     sensor_msgs::PointCloud2 cloudMsg = from_python<sensor_msgs::PointCloud2>(pSerialCloud);
@@ -245,8 +244,8 @@ cloudMsgToImageMsgWrapper(const std::string &pSerialCloud)
  * @brief Crop a sensor_msgs/PointCloud2 message using a BoundingBox2D object, wrapper for C++ function
  *        cropOrganizedCloudMsg
  */
-std::string
-cropOrganizedCloudMsgWrapper(const std::string &pSerialCloud, BoundingBox2DWrapper pBox)
+bp::object
+cropOrganizedCloudMsgWrapper(const bp::object & pSerialCloud, BoundingBox2DWrapper pBox)
 {
     // unserialize cloud message
     sensor_msgs::PointCloud2 cloudMsg = from_python<sensor_msgs::PointCloud2>(pSerialCloud);
@@ -258,8 +257,8 @@ cropOrganizedCloudMsgWrapper(const std::string &pSerialCloud, BoundingBox2DWrapp
 }
 
 /* TODO(minhnh) expose Color and other optional params */
-std::string
-planeMsgToMarkerWrapper(const std::string &pSerialPlane, const std::string &pNamespace)
+bp::object
+planeMsgToMarkerWrapper(const bp::object & pSerialPlane, const std::string &pNamespace)
 {
     auto plane = from_python<mas_perception_msgs::Plane>(pSerialPlane);
     auto markerPtr = planeMsgToMarkers(plane, pNamespace);
@@ -274,7 +273,7 @@ BOOST_PYTHON_MODULE(_cpp_wrapper)
     using mas_perception_libs::PlaneSegmenterWrapper;
     using mas_perception_libs::BoundingBox2DWrapper;
 
-    bp::class_<BoundingBoxWrapper>("BoundingBoxWrapper", bp::init<std::string, bp::list&>())
+    bp::class_<BoundingBoxWrapper>("BoundingBoxWrapper", bp::init<const bp::object &, bp::list&>())
             .def("get_pose", &BoundingBoxWrapper::getPose)
             .def("get_ros_message", &BoundingBoxWrapper::getRosMsg);
 
@@ -297,4 +296,6 @@ BOOST_PYTHON_MODULE(_cpp_wrapper)
     bp::def("_cloud_msg_to_image_msg", mas_perception_libs::cloudMsgToImageMsgWrapper);
 
     bp::def("_plane_msg_to_marker", mas_perception_libs::planeMsgToMarkerWrapper);
+
+    bp::def("_crop_organized_cloud_msg", mas_perception_libs::cropOrganizedCloudMsgWrapper);
 }
