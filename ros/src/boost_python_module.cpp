@@ -1,13 +1,13 @@
 /*!
- * @copyright 2018 Bonn-Rhein-Sieg University
+ * @copyright 2018-21 Bonn-Rhein-Sieg University
  *
  * @author Minh Nguyen
  *
  * @brief File contains C++ definitions that are made available in Python using the Boost Python library.
  *        Detailed descriptions of parameters are in the Python source files
  */
-#include <mas_perception_libs/use_numpy.h>
 #include <mas_perception_libs/impl/ros_message_serialization.hpp>
+#include <mas_perception_libs/impl/mat_ndarray_conversion.hpp>
 #include <mas_perception_libs/bounding_box_wrapper.h>
 #include <mas_perception_libs/image_bounding_box.h>
 #include <mas_perception_libs/bounding_box_2d.h>
@@ -21,6 +21,8 @@
 #include <string>
 
 namespace bp = boost::python;
+namespace bnp = boost::python::numpy;
+
 using BoundingBox = mas_perception_libs::BoundingBox;
 
 namespace mas_perception_libs
@@ -202,6 +204,27 @@ getCropsAndBoundingBoxes(
 }
 
 /*!
+ * @brief Draw bounding boxes on an image, wrapper of C++ function drawLabeledBoxes
+ */
+bnp::ndarray
+drawLabeledBoxesWrapper(const bnp::ndarray &pNdarrayImage, const bp::list &pBoxList, int pThickness, double pFontScale)
+{
+    cv::Mat image = ndArrayToMat(pNdarrayImage);
+    std::vector<BoundingBox2D> boundingBoxes;
+    for (int i = 0; i < bp::len(pBoxList); i++)
+    {
+        BoundingBox2DWrapper boundingBox = bp::extract<BoundingBox2DWrapper>(pBoxList[i]);
+        boundingBoxes.push_back(boundingBox);
+    }
+
+    // draw boxes
+    drawLabeledBoxes(image, boundingBoxes, pThickness, pFontScale);
+
+    // convert to Python object and return
+    return matToNDArray(image);
+}
+
+/*!
  * @brief Adjust BoundingBox2D geometry to fit within an image, wrapper for C++ function fitBoxToImage
  */
 BoundingBox2DWrapper
@@ -218,6 +241,17 @@ fitBoxToImageWrapper(const bp::tuple &pImageSizeTuple, BoundingBox2DWrapper pBox
     fitBoxToImage(imageSize, adjustedBox, pOffset);
     pBox.updateBox(adjustedBox);
     return pBox;
+}
+
+/*!
+ * @brief Crop image to a region specified by a BoundingBox2D object, wrapper for C++ function cropImage
+ */
+bnp::ndarray
+cropImageWrapper(const bnp::ndarray &pNdarrayImage, BoundingBox2DWrapper pBox, int pOffset)
+{
+    cv::Mat image = ndArrayToMat(pNdarrayImage);
+    cv::Mat croppedImage = cropImage(image, pBox, pOffset);
+    return matToNDArray(croppedImage);
 }
 
 /*!
@@ -270,6 +304,10 @@ planeMsgToMarkerWrapper(const bp::object & pSerialPlane, const std::string &pNam
 
 BOOST_PYTHON_MODULE(_cpp_wrapper)
 {
+    // Initialise the Python runtime
+    Py_Initialize();
+    bnp::initialize();
+
     using mas_perception_libs::BoundingBoxWrapper;
     using mas_perception_libs::PlaneSegmenterWrapper;
     using mas_perception_libs::BoundingBox2DWrapper;
@@ -292,7 +330,11 @@ BOOST_PYTHON_MODULE(_cpp_wrapper)
             .def_readwrite("height", &BoundingBox2DWrapper::mHeight)
             .def_readwrite("label", &BoundingBox2DWrapper::mLabel);
 
+    bp::def("_draw_labeled_boxes", mas_perception_libs::drawLabeledBoxesWrapper);
+
     bp::def("_fit_box_to_image", mas_perception_libs::fitBoxToImageWrapper);
+
+    bp::def("_crop_image", mas_perception_libs::cropImageWrapper);
 
     bp::def("_cloud_msg_to_image_msg", mas_perception_libs::cloudMsgToImageMsgWrapper);
 

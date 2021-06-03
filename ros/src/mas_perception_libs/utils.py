@@ -12,8 +12,9 @@ from cv_bridge import CvBridgeError
 from sensor_msgs.msg import PointCloud2, Image as ImageMsg
 from mas_perception_msgs.msg import PlaneList, Object, ObjectView
 from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_image_msg, \
-    _crop_organized_cloud_msg, _fit_box_to_image
+    _crop_organized_cloud_msg
 from .bounding_box import BoundingBox2D
+from .visualization import fit_box_to_image
 from .ros_message_serialization import to_cpp, from_cpp
 
 
@@ -141,17 +142,6 @@ def case_insensitive_glob(pattern):
     def either(c):
         return '[%s%s]' % (c.lower(), c.upper()) if c.isalpha() else c
     return glob.glob(''.join(map(either, pattern)))
-
-
-def fit_box_to_image(image_size, bounding_box, offset=0):
-    """
-    resize bounding box to fit dimension of an image
-
-    :param image_size: tuple containing (width, height) of image
-    :type bounding_box: BoundingBox2D
-    :param offset: will pad bounding_box with 'offset' pixels
-    """
-    return _fit_box_to_image(image_size, bounding_box, offset)
 
 
 def cloud_msg_to_ndarray(cloud_msg, fields=['x', 'y', 'z', 'r', 'g', 'b']):

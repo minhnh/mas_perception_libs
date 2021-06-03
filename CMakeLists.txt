@@ -21,7 +21,7 @@ find_package(PCL 1.7 REQUIRED)
 set(PY_MAJOR 3)
 set(PY_MINOR 8)
 set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost REQUIRED COMPONENTS python${PY_MAJOR}${PY_MINOR})
+find_package(Boost REQUIRED COMPONENTS python${PY_MAJOR}${PY_MINOR} COMPONENTS numpy${PY_MAJOR}${PY_MINOR})
 find_package(PythonLibs ${PY_MAJOR}.${PY_MINOR} REQUIRED)
 find_package(OpenCV REQUIRED)
 
