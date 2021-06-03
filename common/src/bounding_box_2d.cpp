@@ -60,13 +60,6 @@ fitBoxToImage(const cv::Size &pImageSize, BoundingBox2D &pBox, int pSizeOffset)
 void
 fitBoxToImage(const cv::Size &pImageSize, cv::Rect &pBox, int pSizeOffset)
 {
-    // ensure adjusted box has non-zero dimensions
-    if (pBox.x > pImageSize.width - 2 || pBox.y > pImageSize.height - 2) {
-        std::ostringstream msgStream;
-        msgStream << "fitBoxToImage: box coordinates (x=" << pBox.x << ", y=" << pBox.y << ") too large for image (w="
-                  << pImageSize.width << ",h=" << pImageSize.height << ")";
-        throw std::runtime_error(msgStream.str());
-    }
     if (pSizeOffset)
     {
         // if size offset is specified, expand bounding box by x offset pixels
@@ -74,6 +67,14 @@ fitBoxToImage(const cv::Size &pImageSize, cv::Rect &pBox, int pSizeOffset)
         pBox.y -= pSizeOffset;
         pBox.width += 2 * pSizeOffset;
         pBox.height += 2 * pSizeOffset;
+    }
+
+    // ensure adjusted box has non-zero dimensions
+    if (pBox.x > pImageSize.width - 2 || pBox.y > pImageSize.height - 2) {
+        std::ostringstream msgStream;
+        msgStream << "fitBoxToImage: box coordinates (x=" << pBox.x << ", y=" << pBox.y << ") too large for image (w="
+                  << pImageSize.width << ",h=" << pImageSize.height << ")";
+        throw std::runtime_error(msgStream.str());
     }
 
     // check if box is outside of image, should be efficient since vectorized

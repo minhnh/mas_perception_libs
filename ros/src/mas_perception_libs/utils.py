@@ -143,6 +143,17 @@ def case_insensitive_glob(pattern):
     return glob.glob(''.join(map(either, pattern)))
 
 
+def fit_box_to_image(image_size, bounding_box, offset=0):
+    """
+    resize bounding box to fit dimension of an image
+
+    :param image_size: tuple containing (width, height) of image
+    :type bounding_box: BoundingBox2D
+    :param offset: will pad bounding_box with 'offset' pixels
+    """
+    return _fit_box_to_image(image_size, bounding_box, offset)
+
+
 def cloud_msg_to_ndarray(cloud_msg, fields=['x', 'y', 'z', 'r', 'g', 'b']):
     """
     extract data from a sensor_msgs/PointCloud2 message into a NumPy array
@@ -162,17 +173,19 @@ def cloud_msg_to_ndarray(cloud_msg, fields=['x', 'y', 'z', 'r', 'g', 'b']):
     return cloud_array
 
 
-def crop_cloud_msg_to_ndarray(cloud_msg, bounding_box, fields=['x', 'y', 'z', 'r', 'g', 'b']):
+def crop_cloud_msg_to_ndarray(cloud_msg, bounding_box, fields=['x', 'y', 'z', 'r', 'g', 'b'], offset=0):
     """
     extract data from sensor_msgs/PointCloud2 message and crop to the dimensions in an BoundingBox2D object
+
     :type cloud_msg: PointCloud2
     :type bounding_box: BoundingBox2D
+    :param offset: will pad bounding_box with 'offset' pixels
     :rtype: ndarray
     """
     assert isinstance(bounding_box, BoundingBox2D)
 
     # fit box to cloud dimensions
-    bounding_box = _fit_box_to_image((cloud_msg.width, cloud_msg.height), bounding_box, 0)
+    bounding_box = fit_box_to_image((cloud_msg.width, cloud_msg.height), bounding_box, offset)
 
     cloud_array = cloud_msg_to_ndarray(cloud_msg, fields=fields)
     cloud_array = cloud_array[
