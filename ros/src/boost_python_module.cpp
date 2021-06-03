@@ -7,7 +7,7 @@
  *        Detailed descriptions of parameters are in the Python source files
  */
 #include <mas_perception_libs/impl/ros_message_serialization.hpp>
-#include <mas_perception_libs/impl/mat_ndarray_conversion.hpp>
+#include <mas_perception_libs/impl/ndarray_conversions.hpp>
 #include <mas_perception_libs/bounding_box_wrapper.h>
 #include <mas_perception_libs/image_bounding_box.h>
 #include <mas_perception_libs/bounding_box_2d.h>
@@ -291,6 +291,29 @@ cropOrganizedCloudMsgWrapper(const bp::object & pSerialCloud, BoundingBox2DWrapp
     return to_python(croppedCloudMsg);
 }
 
+/*!
+ * @brief Transform a sensor_msgs/PointCloud2 message using a transformation matrix, wrapper for pcl_ros function
+ *        transformPointCloud
+ */
+bp::object
+transformPointCloudWrapper(const bp::object &pSerialCloud, const bnp::ndarray &pTfMatrix)
+{
+    // convert tf matrix from bnp::ndarray to Eigen::Matrix
+    Eigen::Matrix4f eigenTfMatrix;
+    ndarray_to_eigenmat_2d(pTfMatrix, eigenTfMatrix);
+
+    // unserialize cloud message
+    sensor_msgs::PointCloud2 cloudMsg = from_python<sensor_msgs::PointCloud2>(pSerialCloud);
+
+    // transform using tf matrix
+    sensor_msgs::PointCloud2 transformedCloud;
+    pcl_ros::transformPointCloud(eigenTfMatrix, cloudMsg, transformedCloud);
+
+    // serialize and return trasnformed cloud
+    // NOTE: this will not update the header, which needs to be done in Python code
+    return to_python(transformedCloud);
+}
+
 /* TODO(minhnh) expose Color and other optional params */
 bp::object
 planeMsgToMarkerWrapper(const bp::object & pSerialPlane, const std::string &pNamespace)
@@ -338,7 +361,9 @@ BOOST_PYTHON_MODULE(_cpp_wrapper)
 
     bp::def("_cloud_msg_to_image_msg", mas_perception_libs::cloudMsgToImageMsgWrapper);
 
-    bp::def("_plane_msg_to_marker", mas_perception_libs::planeMsgToMarkerWrapper);
-
     bp::def("_crop_organized_cloud_msg", mas_perception_libs::cropOrganizedCloudMsgWrapper);
+
+    bp::def("_transform_point_cloud", mas_perception_libs::transformPointCloudWrapper);
+
+    bp::def("_plane_msg_to_marker", mas_perception_libs::planeMsgToMarkerWrapper);
 }

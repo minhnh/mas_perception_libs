@@ -12,7 +12,7 @@ from cv_bridge import CvBridgeError
 from sensor_msgs.msg import PointCloud2, Image as ImageMsg
 from mas_perception_msgs.msg import PlaneList, Object, ObjectView
 from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_image_msg, \
-    _crop_organized_cloud_msg
+    _crop_organized_cloud_msg, _transform_point_cloud
 from .bounding_box import BoundingBox2D
 from .visualization import fit_box_to_image
 from .ros_message_serialization import to_cpp, from_cpp
@@ -236,55 +236,51 @@ def crop_cloud_to_xyz(cloud_msg, bounding_box):
     return crop_cloud_msg_to_ndarray(cloud_msg, bounding_box, fields=['x', 'y', 'z'])
 
 
-# def transform_cloud_with_listener(cloud_msg, target_frame, tf_listener):
-#     try:
-#         common_time = tf_listener.getLatestCommonTime(target_frame, cloud_msg.header.frame_id)
-#         cloud_msg.header.stamp = common_time
-#         tf_listener.waitForTransform(target_frame, cloud_msg.header.frame_id, cloud_msg.header.stamp, rospy.Duration(1))
-#         tf_matrix = tf_listener.asMatrix(target_frame, cloud_msg.header)
-#     except(tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-#         raise RuntimeError('Unable to transform {0} -> {1}'.format(cloud_msg.header.frame_id, target_frame))
+def transform_cloud_with_listener(cloud_msg, target_frame, tf_listener):
+    try:
+        common_time = tf_listener.getLatestCommonTime(target_frame, cloud_msg.header.frame_id)
+        cloud_msg.header.stamp = common_time
+        tf_listener.waitForTransform(target_frame, cloud_msg.header.frame_id, cloud_msg.header.stamp, rospy.Duration(1))
+        tf_matrix = tf_listener.asMatrix(target_frame, cloud_msg.header)
+    except(tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+        raise RuntimeError('Unable to transform {0} -> {1}'.format(cloud_msg.header.frame_id, target_frame))
 
-#     return transform_point_cloud(cloud_msg, tf_matrix, target_frame)
-
-
-# def transform_point_cloud_trans_quat(cloud_msg, translation, rotation, target_frame):
-#     """
-#     transform cloud using transforms3d to calculate transformation matrix
-
-#     :type cloud_msg: PointCloud2
-#     :param translation: translation vector
-#     :type translation: list
-#     :param rotation: rotation quaternion, i.e. [w, x, y, z]
-#     :param target_frame: name of new frame to fill in cloud_msg.header.frame_id
-#     :return: transformed cloud
-#     :rtype: PointCloud2
-#     """
-#     from transforms3d.affines import compose
-#     from transforms3d.quaternions import quat2mat
-
-#     rotation_mat = quat2mat(rotation)
-#     # use vector of ones so there's no zooming in the transformation matrix
-#     zoom = (1, 1, 1)
-#     transform_matrix = compose(translation, rotation_mat, zoom)
-#     return transform_point_cloud(cloud_msg, transform_matrix, target_frame)
+    return transform_point_cloud(cloud_msg, tf_matrix, target_frame)
 
 
-# def transform_point_cloud(cloud_msg, tf_matrix, target_frame):
-#     """
-#     transform a sensor_msgs/PointCloud2 message using a transformation matrix
+def transform_point_cloud_trans_quat(cloud_msg, translation, rotation, target_frame):
+    """
+    transform cloud using transforms3d to calculate transformation matrix
 
-#     :type cloud_msg: PointCloud2
-#     :param tf_matrix: transformation matrix
-#     :type tf_matrix: ndarray
-#     :param target_frame: frame to be transformed to
-#     :type target_frame: str
-#     :return transformed cloud
-#     :rtype PointCloud2
-#     """
-#     transformed_cloud = from_cpp(_transform_point_cloud(to_cpp(cloud_msg), tf_matrix), PointCloud2)
-#     transformed_cloud.header.frame_id = target_frame
-#     return transformed_cloud
+    :type cloud_msg: PointCloud2
+    :param translation: translation vector
+    :type translation: list
+    :param rotation: rotation quaternion, i.e. [w, x, y, z]
+    :param target_frame: name of new frame to fill in cloud_msg.header.frame_id
+    :return: transformed cloud
+    :rtype: PointCloud2
+    """
+    from pytransform3d.transformations import transform_from_pq
+
+    transform_matrix = transform_from_pq(np.append(translation, rotation))
+    return transform_point_cloud(cloud_msg, transform_matrix, target_frame)
+
+
+def transform_point_cloud(cloud_msg, tf_matrix, target_frame):
+    """
+    transform a sensor_msgs/PointCloud2 message using a transformation matrix
+
+    :type cloud_msg: PointCloud2
+    :param tf_matrix: transformation matrix
+    :type tf_matrix: ndarray
+    :param target_frame: frame to be transformed to
+    :type target_frame: str
+    :return transformed cloud
+    :rtype PointCloud2
+    """
+    transformed_cloud = from_cpp(_transform_point_cloud(to_cpp(cloud_msg), tf_matrix), PointCloud2)
+    transformed_cloud.header.frame_id = target_frame
+    return transformed_cloud
 
 
 def get_obj_msg_from_detection(cloud_msg, bounding_box, category, confidence, frame_id):
