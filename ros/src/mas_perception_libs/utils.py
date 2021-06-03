@@ -11,7 +11,8 @@ from roslib.message import get_message_class
 from cv_bridge import CvBridgeError
 from sensor_msgs.msg import PointCloud2, Image as ImageMsg
 from mas_perception_msgs.msg import PlaneList, Object, ObjectView
-from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_image_msg
+from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_image_msg, \
+    _crop_organized_cloud_msg, _fit_box_to_image
 from .bounding_box import BoundingBox2D
 from .ros_message_serialization import to_cpp, from_cpp
 
@@ -170,16 +171,8 @@ def crop_cloud_msg_to_ndarray(cloud_msg, bounding_box, fields=['x', 'y', 'z', 'r
     """
     assert isinstance(bounding_box, BoundingBox2D)
 
-    # ensure (x, y) of box inside cloud dimension
-    if (bounding_box.x >= cloud_msg.height or bounding_box.y >= cloud_msg.width
-            or bounding_box.x < 0 or bounding_box.y < 0):
-        raise ValueError("bounding box (x, y) outside of cloud dimension: ({}, {})"
-                         .format(bounding_box.x, bounding_box.y))
     # fit box to cloud dimensions
-    if bounding_box.x + bounding_box.height > cloud_msg.height:
-        bounding_box.height = cloud_msg.height - bounding_box.x
-    if bounding_box.y + bounding_box.width > cloud_msg.width:
-        bounding_box.width = cloud_msg.width - bounding_box.y
+    bounding_box = _fit_box_to_image((cloud_msg.width, cloud_msg.height), bounding_box, 0)
 
     cloud_array = cloud_msg_to_ndarray(cloud_msg, fields=fields)
     cloud_array = cloud_array[
@@ -211,21 +204,21 @@ def cloud_msg_to_image_msg(cloud_msg):
     return from_cpp(serial_img_msg, ImageMsg)
 
 
-# def crop_organized_cloud_msg(cloud_msg, bounding_box):
-#     """
-#     crop a sensor_msgs/PointCloud2 message using info from a BoundingBox2D object
+def crop_organized_cloud_msg(cloud_msg, bounding_box):
+    """
+    crop a sensor_msgs/PointCloud2 message using info from a BoundingBox2D object
 
-#     :type cloud_msg: PointCloud2
-#     :type bounding_box: BoundingBox2D
-#     :return: cropped cloud
-#     :rtype: PointCloud2
-#     """
-#     if not isinstance(bounding_box, BoundingBox2D):
-#         raise ValueError('bounding_box is not a BoundingBox2D instance')
+    :type cloud_msg: PointCloud2
+    :type bounding_box: BoundingBox2D
+    :return: cropped cloud
+    :rtype: PointCloud2
+    """
+    if not isinstance(bounding_box, BoundingBox2D):
+        raise ValueError('bounding_box is not a BoundingBox2D instance')
 
-#     serial_cloud = to_cpp(cloud_msg)
-#     serial_cropped = _crop_organized_cloud_msg(serial_cloud, bounding_box)
-#     return from_cpp(serial_cropped, PointCloud2)
+    serial_cloud = to_cpp(cloud_msg)
+    serial_cropped = _crop_organized_cloud_msg(serial_cloud, bounding_box)
+    return from_cpp(serial_cropped, PointCloud2)
 
 
 def crop_cloud_to_xyz(cloud_msg, bounding_box):

@@ -74,8 +74,8 @@ fitBoxToImage(const cv::Size &pImageSize, BoundingBox2D &pBox, int pSizeOffset =
  * @brief adjust a cv::Rect object to image size
  * @return adjusted box as cv::Rect object
  */
-cv::Rect
-fitBoxToImage(const cv::Size &pImageSize, cv::Rect pBox, int pSizeOffset = 0);
+void
+fitBoxToImage(const cv::Size &pImageSize, cv::Rect &pBox, int pSizeOffset = 0);
 
 /*!
  * @brief crop a CV image using a set of 2D vertices

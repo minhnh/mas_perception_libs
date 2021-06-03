@@ -214,7 +214,8 @@ fitBoxToImageWrapper(const bp::tuple &pImageSizeTuple, BoundingBox2DWrapper pBox
     int width = static_cast<int>(bp::extract<double>(pImageSizeTuple[0]));
     int height = static_cast<int>(bp::extract<double>(pImageSizeTuple[1]));
     cv::Size imageSize(width, height);
-    cv::Rect adjustedBox = fitBoxToImage(imageSize, pBox.getCvRect(), pOffset);
+    auto adjustedBox = pBox.getCvRect();
+    fitBoxToImage(imageSize, adjustedBox, pOffset);
     pBox.updateBox(adjustedBox);
     return pBox;
 }
