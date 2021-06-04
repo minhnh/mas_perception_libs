@@ -18,17 +18,17 @@ namespace mas_perception_libs
 class BoundingBoxWrapper
 {
 public:
-    BoundingBoxWrapper(const std::string&, const boost::python::list&);
+    BoundingBoxWrapper(const bp::object &, const boost::python::list &);
     ~BoundingBoxWrapper();
 
-    std::string getPose();
-    std::string getRosMsg();
+    bp::object getPose();
+    bp::object getRosMsg();
 
 private:
     BoundingBox mBox;
     geometry_msgs::PoseStamped mPose;
 
-    void calculatePose(const std_msgs::Header&);
+    void calculatePose(const std_msgs::Header &);
 };
 
 }  // namespace mas_perception_libs

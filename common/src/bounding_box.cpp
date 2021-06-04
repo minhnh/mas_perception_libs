@@ -6,7 +6,7 @@
  */
 
 #include <pcl/common/transforms.h>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 #include <mas_perception_libs/bounding_box.h>
 #include <limits>
@@ -27,11 +27,7 @@ BoundingBox BoundingBox::create(const PointCloud::ConstPtr& cloud,
     PointCloud cloud_transformed;
     pcl::transformPointCloud(*cloud, cloud_transformed, transform);
 
-    // Step 2: project cloud onto the plane and calculate bounding box for the projected points.
-    // Have no idea how this "mem storage" and "seq" beasts work.
-    // Initialization example taken from: http://opencv.willowgarage.com/documentation/dynamic_structures.html#seqsort
-    CvMemStorage* storage = cvCreateMemStorage(0);
-    CvSeq* points = cvCreateSeq(CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage);
+    std::vector<cv::Point> points;
 
     // CvPoints are made of integers, so we will need to scale our points (which are in meters).
     const float SCALE = 1000.0;
@@ -42,10 +38,10 @@ BoundingBox BoundingBox::create(const PointCloud::ConstPtr& cloud,
     {
         if (!std::isnan(pt.z))
         {
-            CvPoint p;
+            cv::Point p;
             p.x = static_cast<int>(pt.x * SCALE);
             p.y = static_cast<int>(pt.y * SCALE);
-            cvSeqPush(points, &p);
+            points.push_back(p);
             if (pt.z > max_z)
                 max_z = pt.z;
             if (pt.z < min_z)
@@ -53,8 +49,7 @@ BoundingBox BoundingBox::create(const PointCloud::ConstPtr& cloud,
         }
     }
 
-    CvBox2D box2d = cvMinAreaRect2(points);
-    cvReleaseMemStorage(&storage);
+    cv::RotatedRect box2d = cv::minAreaRect(points);
     box.dimensions_[0] = max_z - min_z;
     box.dimensions_[1] = std::max(box2d.size.width, box2d.size.height) / SCALE;
     box.dimensions_[2] = std::min(box2d.size.width, box2d.size.height) / SCALE;

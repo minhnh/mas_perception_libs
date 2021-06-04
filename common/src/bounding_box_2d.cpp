@@ -4,6 +4,7 @@
  * @author Minh Nguyen
  *
  */
+#include <sstream>
 #include <vector>
 #include <opencv2/imgproc.hpp>
 #include <mas_perception_libs/bounding_box_2d.h>
@@ -27,7 +28,8 @@ drawLabeledBoxes(cv::Mat &pImage, std::vector<BoundingBox2D> pBoundingBoxes, int
     for (auto &pBoundingBox : pBoundingBoxes)
     {
         // fit box to within image boundaries
-        cv::Rect boxRect = fitBoxToImage(imageSize, pBoundingBox.getCvRect());
+        auto boxRect = pBoundingBox.getCvRect();
+        fitBoxToImage(imageSize, boxRect);
 
         // fit label into within image boundaries
         int baseline = 0;
@@ -41,21 +43,22 @@ drawLabeledBoxes(cv::Mat &pImage, std::vector<BoundingBox2D> pBoundingBoxes, int
         // draw label with background
         cv::Point textTopLeft = cv::Point(boxRect.x, boxRect.y - textSize.height);
         cv::Point textBottomRight = cv::Point(boxRect.x + textSize.width, boxRect.y + baseline);
-        cv::rectangle(pImage, textTopLeft, textBottomRight, pBoundingBox.mColor, CV_FILLED);
+        cv::rectangle(pImage, textTopLeft, textBottomRight, pBoundingBox.mColor, cv::FILLED);
         cv::putText(pImage, pBoundingBox.mLabel, cv::Point(boxRect.x, boxRect.y),
                     cv::FONT_HERSHEY_PLAIN, pFontScale, CV_RGB(255, 255, 555), 1);
     }
 }
 
 void
-fitBoxToImage(const cv::Size &pImageSize, BoundingBox2D& pBox, int pSizeOffset)
+fitBoxToImage(const cv::Size &pImageSize, BoundingBox2D &pBox, int pSizeOffset)
 {
-    cv::Rect newBox = fitBoxToImage(pImageSize, pBox.getCvRect(), pSizeOffset);
-    pBox.updateBox(newBox);
+    auto cvBox = pBox.getCvRect();
+    fitBoxToImage(pImageSize, cvBox, pSizeOffset);
+    pBox.updateBox(cvBox);
 }
 
-cv::Rect
-fitBoxToImage(const cv::Size &pImageSize, cv::Rect pBox, int pSizeOffset)
+void
+fitBoxToImage(const cv::Size &pImageSize, cv::Rect &pBox, int pSizeOffset)
 {
     if (pSizeOffset)
     {
@@ -66,10 +69,18 @@ fitBoxToImage(const cv::Size &pImageSize, cv::Rect pBox, int pSizeOffset)
         pBox.height += 2 * pSizeOffset;
     }
 
+    // ensure adjusted box has non-zero dimensions
+    if (pBox.x > pImageSize.width - 2 || pBox.y > pImageSize.height - 2) {
+        std::ostringstream msgStream;
+        msgStream << "fitBoxToImage: box coordinates (x=" << pBox.x << ", y=" << pBox.y << ") too large for image (w="
+                  << pImageSize.width << ",h=" << pImageSize.height << ")";
+        throw std::runtime_error(msgStream.str());
+    }
+
     // check if box is outside of image, should be efficient since vectorized
     cv::Rect image_rect(0, 0, pImageSize.width, pImageSize.height);
     if ((pBox & image_rect) == pBox)
-        return pBox;
+        return;
 
     if (pBox.x < 0)
         pBox.x = 0;
@@ -82,8 +93,6 @@ fitBoxToImage(const cv::Size &pImageSize, cv::Rect pBox, int pSizeOffset)
 
     if (pBox.y + pBox.height >= pImageSize.height)
         pBox.height = pImageSize.height - pBox.y - 1;
-
-    return pBox;
 }
 
 cv::Mat
@@ -103,8 +112,8 @@ cropImage(cv::Mat &pImage, const std::vector<cv::Point2f> &pVertices, int pOffse
 cv::Mat
 cropImage(cv::Mat &pImage, cv::Rect &pRoiRect, int pOffset, bool pCopy)
 {
-    auto roiRect = fitBoxToImage(pImage.size(), pRoiRect, pOffset);
-    cv::Mat croppedImage(pImage, roiRect);
+    fitBoxToImage(pImage.size(), pRoiRect, pOffset);
+    cv::Mat croppedImage(pImage, pRoiRect);
     if (pCopy)
     {
         cv::Mat croppedCopy;

@@ -8,7 +8,6 @@
 #define MAS_PERCEPTION_LIBS_IMAGE_BOUNDING_BOX_H_
 
 #include <vector>
-#include <opencv2/opencv.hpp>
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_geometry/pinhole_camera_model.h>

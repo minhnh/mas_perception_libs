@@ -3,7 +3,6 @@ import cv2
 from cv_bridge import CvBridgeError
 from visualization_msgs.msg import Marker
 
-from mas_perception_msgs.msg import Plane as PlaneMsg
 from mas_perception_libs._cpp_wrapper import _draw_labeled_boxes, _fit_box_to_image, _crop_image, _plane_msg_to_marker
 from .bounding_box import BoundingBox2DWrapper
 from .ros_message_serialization import from_cpp, to_cpp
@@ -63,8 +62,8 @@ def fit_box_to_image(image_size, bounding_box, offset=0):
     """
     Adjust bounding box to image size
 
-    :param image_size: 2-tuple (width, height)
-    :param bounding_box: BoundingBox2D object
+    :param image_size: 2-tuple (width, height) containing dimension of image
+    :type bounding_box: BoundingBox2D
     :param offset: used to expand bounding box's dimensions
     :return: adjusted BoundingBox2D object
     """
@@ -118,7 +117,7 @@ def bgr_dict_from_classes(classes):
 
 def plane_msg_to_marker(plane_msg, namespace):
     """
-    :type plane_msg: PlaneMsg
+    :type plane_msg: mas_perception_msgs.msg.PlaneMsg
     :type namespace: str
     :rtype: Marker
     """

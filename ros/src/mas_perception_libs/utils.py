@@ -4,14 +4,17 @@ import numpy as np
 import cv2
 import rospy
 import rosbag
+# import tf
+import ros_numpy
 from rospkg import RosPack
-import tf
+from roslib.message import get_message_class
 from cv_bridge import CvBridgeError
 from sensor_msgs.msg import PointCloud2, Image as ImageMsg
 from mas_perception_msgs.msg import PlaneList, Object, ObjectView
-from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_cv_image, _cloud_msg_to_image_msg,\
-    _crop_organized_cloud_msg, _crop_cloud_to_xyz, _transform_point_cloud
+from mas_perception_libs._cpp_wrapper import PlaneSegmenterWrapper, _cloud_msg_to_image_msg, \
+    _crop_organized_cloud_msg, _transform_point_cloud
 from .bounding_box import BoundingBox2D
+from .visualization import fit_box_to_image
 from .ros_message_serialization import to_cpp, from_cpp
 
 
@@ -81,6 +84,9 @@ def get_bag_file_msg_by_type(bag_file_path, msg_type):
     for topic, msg, t in bag_file.read_messages():
         if topic not in bag_topics or bag_topics[topic].msg_type != msg_type:
             continue
+        # serialize and deserialize message to get rid of bag file type
+        msg_string = to_cpp(msg)
+        msg = from_cpp(msg_string, get_message_class(msg_type))
         messages.append(msg)
     bag_file.close()
     return messages
@@ -138,6 +144,46 @@ def case_insensitive_glob(pattern):
     return glob.glob(''.join(map(either, pattern)))
 
 
+def cloud_msg_to_ndarray(cloud_msg, fields=['x', 'y', 'z', 'r', 'g', 'b']):
+    """
+    extract data from a sensor_msgs/PointCloud2 message into a NumPy array
+
+    :type cloud_msg: PointCloud2
+    :type fields: data fields in a PointCloud2 message
+    :return: NumPy array of given fields
+    """
+    assert isinstance(cloud_msg, PointCloud2)
+    cloud_record = ros_numpy.numpify(cloud_msg)
+    cloud_record = ros_numpy.point_cloud2.split_rgb_field(cloud_record)
+    cloud_array = np.zeros((*cloud_record.shape, len(fields)))
+    index = 0
+    for field in fields:
+        cloud_array[:, :, index] = cloud_record[field]
+        index += 1
+    return cloud_array
+
+
+def crop_cloud_msg_to_ndarray(cloud_msg, bounding_box, fields=['x', 'y', 'z', 'r', 'g', 'b'], offset=0):
+    """
+    extract data from sensor_msgs/PointCloud2 message and crop to the dimensions in an BoundingBox2D object
+
+    :type cloud_msg: PointCloud2
+    :type bounding_box: BoundingBox2D
+    :param offset: will pad bounding_box with 'offset' pixels
+    :rtype: ndarray
+    """
+    assert isinstance(bounding_box, BoundingBox2D)
+
+    # fit box to cloud dimensions
+    bounding_box = fit_box_to_image((cloud_msg.width, cloud_msg.height), bounding_box, offset)
+
+    cloud_array = cloud_msg_to_ndarray(cloud_msg, fields=fields)
+    cloud_array = cloud_array[
+        bounding_box.x: bounding_box.x + bounding_box.height,
+        bounding_box.y: bounding_box.y + bounding_box.width, :]
+    return cloud_array
+
+
 def cloud_msg_to_cv_image(cloud_msg):
     """
     extract CV image from a sensor_msgs/PointCloud2 message
@@ -145,8 +191,7 @@ def cloud_msg_to_cv_image(cloud_msg):
     :type cloud_msg: PointCloud2
     :return: extracted image as numpy array
     """
-    serial_cloud = to_cpp(cloud_msg)
-    return _cloud_msg_to_cv_image(serial_cloud)
+    return cloud_msg_to_ndarray(cloud_msg, ['r', 'g', 'b'])
 
 
 def cloud_msg_to_image_msg(cloud_msg):
@@ -188,11 +233,7 @@ def crop_cloud_to_xyz(cloud_msg, bounding_box):
     :return: (x, y, z) coordinates within the bounding box
     :rtype: ndarray
     """
-    if not isinstance(bounding_box, BoundingBox2D):
-        raise ValueError('bounding_box is not a BoundingBox2D instance')
-
-    serial_cloud = to_cpp(cloud_msg)
-    return _crop_cloud_to_xyz(serial_cloud, bounding_box)
+    return crop_cloud_msg_to_ndarray(cloud_msg, bounding_box, fields=['x', 'y', 'z'])
 
 
 def transform_cloud_with_listener(cloud_msg, target_frame, tf_listener):
@@ -219,13 +260,9 @@ def transform_point_cloud_trans_quat(cloud_msg, translation, rotation, target_fr
     :return: transformed cloud
     :rtype: PointCloud2
     """
-    from transforms3d.affines import compose
-    from transforms3d.quaternions import quat2mat
+    from pytransform3d.transformations import transform_from_pq
 
-    rotation_mat = quat2mat(rotation)
-    # use vector of ones so there's no zooming in the transformation matrix
-    zoom = (1, 1, 1)
-    transform_matrix = compose(translation, rotation_mat, zoom)
+    transform_matrix = transform_from_pq(np.append(translation, rotation))
     return transform_point_cloud(cloud_msg, transform_matrix, target_frame)
 
 
@@ -244,6 +281,7 @@ def transform_point_cloud(cloud_msg, tf_matrix, target_frame):
     transformed_cloud = from_cpp(_transform_point_cloud(to_cpp(cloud_msg), tf_matrix), PointCloud2)
     transformed_cloud.header.frame_id = target_frame
     return transformed_cloud
+
 
 def get_obj_msg_from_detection(cloud_msg, bounding_box, category, confidence, frame_id):
     '''Creates an mas_perception_msgs.msg.Object message from the given
