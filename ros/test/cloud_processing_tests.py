@@ -15,7 +15,7 @@ PACKAGE = 'mas_perception_libs'
 TEST_NAME = 'cloud_processing'
 
 
-def get_random_bounding_boxes(img_width, img_height, box_num):
+def get_random_boxes_and_offsets(img_width, img_height, box_num):
     boxes = []
     for i in range(box_num):
         y = np.random.randint(0, img_height - 1)
@@ -31,7 +31,14 @@ def get_random_bounding_boxes(img_width, img_height, box_num):
 
         box = BoundingBox2D(box_geometry=(x, y, width, height))
         boxes.append(box)
-    return boxes
+
+    # half of boxes will come with non-zero random offsets
+    offsets = np.zeros(box_num)
+    for i in range(int(box_num / 2)):
+        offsets[i] = np.random.randint(1, np.min([img_width, img_height]) / 4)
+    np.random.shuffle(offsets)
+
+    return boxes, offsets
 
 
 class TestCloudProcessing(unittest.TestCase):
@@ -75,15 +82,23 @@ class TestCloudProcessing(unittest.TestCase):
                                   "'cloud_msg_to_cv_image' does not return type 'numpy.ndarray'")
 
             # test draw_label_boxes()
-            boxes = get_random_bounding_boxes(cloud_msg.width, cloud_msg.height, TestCloudProcessing._crop_boxes_num)
+            boxes, offsets = get_random_boxes_and_offsets(cloud_msg.width, cloud_msg.height,
+                                                          TestCloudProcessing._crop_boxes_num)
 
             drawn_img = draw_labeled_boxes(cv_image.astype(np.uint8), boxes)
             self.assertIsInstance(drawn_img, np.ndarray, "'draw_labeled_boxes' does not return type 'numpy.ndarray'")
 
             # test crop_image()
-            for box in boxes:
-                cropped = crop_image(drawn_img, box)
+            for index, box in enumerate(boxes):
+                cropped = crop_image(drawn_img, box, int(offsets[index]))
                 self.assertIsInstance(cropped, np.ndarray)
+
+            # test for expected box out of bound exception
+            box = BoundingBox2D(box_geometry=(cloud_msg.width + offsets[0] - 1, cloud_msg.height + offsets[0] - 1,
+                                              boxes[0].width, boxes[0].height))
+            with self.assertRaises(RuntimeError,
+                                   msg="crop_image failed to raise exception when box coords are too large"):
+                crop_image(drawn_img, box, int(offsets[0]))
 
             # test cloud_msg_to_image_msg()
             image_msg = cloud_msg_to_image_msg(cloud_msg)
@@ -94,7 +109,7 @@ class TestCloudProcessing(unittest.TestCase):
         for cloud_msg in TestCloudProcessing._cloud_messages:
             cloud_width = cloud_msg.width
             cloud_height = cloud_msg.height
-            boxes = get_random_bounding_boxes(cloud_width, cloud_height, TestCloudProcessing._crop_boxes_num)
+            boxes, _ = get_random_boxes_and_offsets(cloud_width, cloud_height, TestCloudProcessing._crop_boxes_num)
             for box in boxes:
                 cropped_cloud = crop_organized_cloud_msg(cloud_msg, box)
                 self.assertIs(type(cropped_cloud), PointCloud2,
