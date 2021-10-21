@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(mas_perception_libs)
 
 ## Compile as C++14, supported in ROS Kinetic and newer
@@ -17,13 +17,13 @@ find_package(catkin REQUIRED COMPONENTS
   mas_perception_msgs
 )
 
-find_package(PCL 1.7 REQUIRED)
 set(PY_MAJOR 3)
 set(PY_MINOR 8)
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost REQUIRED COMPONENTS python${PY_MAJOR}${PY_MINOR} COMPONENTS numpy${PY_MAJOR}${PY_MINOR})
 find_package(PythonLibs ${PY_MAJOR}.${PY_MINOR} REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(PCL 1.10 REQUIRED)
 
 catkin_python_setup()
 
@@ -124,14 +124,20 @@ endif()
 # includes
 install(DIRECTORY common/include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
+  FILES_MATCHING PATTERN "*.h*"
 )
 
 install(DIRECTORY ros/include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
+  FILES_MATCHING PATTERN "*.h*"
 )
 
+# launch files
+install(DIRECTORY ros/launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/ros/launch
+)
+
+# main library
 install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
