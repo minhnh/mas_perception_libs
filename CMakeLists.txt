@@ -91,8 +91,6 @@ set_target_properties(_cpp_wrapper PROPERTIES
 target_link_libraries(_cpp_wrapper
   mas_perception_libs
   ${Boost_LIBRARIES}
-  #${Boost_${BOOST_PYTHON_COMPONENT}_LIBRARIES}
-  #${Boost_${BOOST_NUMPY_COMPONENT}_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${Python3_LIBRARIES}
   ${catkin_LIBRARIES}
