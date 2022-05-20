@@ -17,13 +17,14 @@ find_package(catkin REQUIRED COMPONENTS
   mas_perception_msgs
 )
 
-set(PY_MAJOR 3)
-set(PY_MINOR 8)
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost REQUIRED COMPONENTS python${PY_MAJOR}${PY_MINOR} COMPONENTS numpy${PY_MAJOR}${PY_MINOR})
-find_package(PythonLibs ${PY_MAJOR}.${PY_MINOR} REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(PCL 1.10 REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Development)
+set(BOOST_PYTHON_COMPONENT python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR})
+set(BOOST_NUMPY_COMPONENT numpy${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR})
+# It's important to find Boost last so the other libraries won't override Boost-related CMake variables
+# Not doing this may result in odd undefined expression errors at runtime 
+find_package(Boost REQUIRED COMPONENTS ${BOOST_PYTHON_COMPONENT} COMPONENTS ${BOOST_NUMPY_COMPONENT})
 
 catkin_python_setup()
 
@@ -53,7 +54,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
-  ${PYTHON_INCLUDE_DIRS}
+  ${Python3_INCLUDE_DIRS}
 )
 
 ###################################
@@ -90,9 +91,9 @@ set_target_properties(_cpp_wrapper PROPERTIES
 target_link_libraries(_cpp_wrapper
   mas_perception_libs
   ${Boost_LIBRARIES}
-  ${PYTHON_LIBRARIES}
-  ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
+  ${Python3_LIBRARIES}
+  ${catkin_LIBRARIES}
 )
 
 ###################################
