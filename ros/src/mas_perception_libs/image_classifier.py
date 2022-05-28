@@ -3,7 +3,7 @@ import yaml
 from abc import ABCMeta, abstractmethod
 import numpy as np
 from cv_bridge import CvBridge
-from utils import get_classes_in_data_dir, process_image_message
+from mas_perception_libs.utils import get_classes_in_data_dir, process_image_message
 
 
 class ImageClassifier(object):

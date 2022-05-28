@@ -48,19 +48,19 @@ class ImageDetectorBase(object):
             class_file = kwargs.get('class_file', None)
             if class_file is not None and os.path.exists(class_file):
                 with open(class_file, 'r') as infile:
-                    self._classes = yaml.load(infile)
+                    self._classes = yaml.load(infile, Loader=yaml.SafeLoader)
 
         if self._classes is None:
             raise ValueError("no valid 'class_file' or 'classes' parameter specified")
 
         # generate colors for each class for visualization
-        self._class_colors = bgr_dict_from_classes(self._classes.values())
+        self._class_colors = bgr_dict_from_classes(list(self._classes.values()))
 
         # load kwargs file and call load_model()
         model_kwargs_file = kwargs.get('model_kwargs_file', None)
         if model_kwargs_file is not None and os.path.exists(model_kwargs_file):
             with open(model_kwargs_file, 'r') as infile:
-                load_model_kwargs = yaml.load(infile)
+                load_model_kwargs = yaml.load(infile, Loader=yaml.SafeLoader)
         else:
             load_model_kwargs = {}
 

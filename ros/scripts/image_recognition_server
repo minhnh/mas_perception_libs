@@ -2,7 +2,7 @@
 import os
 from importlib import import_module
 import rospy
-from mas_perception_libs import RecognizeImageService
+from mas_perception_libs.image_recognition_service import RecognizeImageService
 
 
 if __name__ == '__main__':
