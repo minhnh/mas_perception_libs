@@ -110,7 +110,7 @@ def bgr_dict_from_classes(classes):
     bright = np.ones((1, class_num, 1), dtype=np.uint8) * 127   # value/brightness 50%
 
     hsv = np.concatenate((hue, sat, bright), axis=2)
-    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR).astype(int)
+    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR).astype(float)
 
     return {class_name: tuple(bgr[0][index]) for index, class_name in enumerate(classes)}
 
