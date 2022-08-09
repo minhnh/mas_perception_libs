@@ -3,7 +3,7 @@ from importlib import import_module
 import os
 
 import rospy
-from mas_perception_libs import ObjectDetectionActionServer
+from mas_perception_libs.scene_detection_action import ObjectDetectionActionServer
 
 
 if __name__ == '__main__':
