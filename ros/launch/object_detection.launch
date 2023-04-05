@@ -3,10 +3,10 @@
     <arg name="action_name" default="/mas_perception/detect_image"/>
     <arg name="cloud_topic" default="" />
     <arg name="target_frame" default="/base_link" />
-    <arg name="class_annotations" default="$(find mas_perception_libs)/models/class_annotation_example.yml" />
-    <arg name="kwargs_file" default="$(find mas_perception_libs)/models/image_detector_test_kwargs.yml" />
-    <arg name="detection_module" default="mas_perception_libs" />
-    <arg name="detection_class" default="ImageDetectorTest" />
+    <arg name="class_annotations" default="$(find mas_perception_libs)/models/coco_classes.yml" />
+    <arg name="kwargs_file" default="$(find mas_perception_libs)/models/torch_detection_kwargs.yml" />
+    <arg name="detection_module" default="mas_perception_libs.image_detector" />
+    <arg name="detection_class" default="TorchImageDetector" />
 
     <node pkg="mas_perception_libs" type="object_detection_action_server" name="object_detection_server" output="screen">
         <param name="action_name" type="string" value="$(arg action_name)" />
